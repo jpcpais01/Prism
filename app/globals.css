@@ -83,10 +83,17 @@ body::-webkit-scrollbar { display: none; width: 0; }
   100% { transform: translateX(240%)  skewX(-14deg); }
 }
 
-.animate-float       { animation: float 3.2s ease-in-out infinite; }
-.animate-spin-slow   { animation: spin-slow 1.2s linear infinite; }
-.animate-pulse-ring  { animation: pulse-ring 2.4s cubic-bezier(0.455,0.03,0.515,0.955) infinite; }
-.animate-gradient    { animation: gradient-move 4s ease infinite; background-size: 200% 200%; }
-.animate-aurora      { animation: aurora-move  4.5s ease-in-out infinite; }
-.animate-aurora-alt  { animation: aurora-alt   5.8s ease-in-out infinite; }
-.animate-prism-sweep { animation: prism-sweep  3.2s ease-in-out infinite; }
+@keyframes ring-pulse {
+  0%   { transform: scale(0.55); opacity: 0.55; }
+  100% { transform: scale(3.0);  opacity: 0;    }
+}
+
+.animate-float        { animation: float 3.2s ease-in-out infinite; }
+.animate-spin-slow    { animation: spin-slow 1.2s linear infinite; }
+.animate-spin-elegant { animation: spin-slow 2.6s linear infinite; }
+.animate-pulse-ring   { animation: pulse-ring 2.4s cubic-bezier(0.455,0.03,0.515,0.955) infinite; }
+.animate-gradient     { animation: gradient-move 4s ease infinite; background-size: 200% 200%; }
+.animate-aurora       { animation: aurora-move  4.5s ease-in-out infinite; }
+.animate-aurora-alt   { animation: aurora-alt   5.8s ease-in-out infinite; }
+.animate-prism-sweep  { animation: prism-sweep  3.2s ease-in-out infinite; }
+.animate-ring-pulse   { animation: ring-pulse   2.6s cubic-bezier(0.2, 0.65, 0.35, 1) infinite; }

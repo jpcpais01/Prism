@@ -163,6 +163,10 @@ export default function PrismApp() {
       const c = localStorage.getItem('prism-customs')
       if (c) setCustoms(JSON.parse(c))
     } catch {}
+    try {
+      const h = localStorage.getItem('prism-history')
+      if (h) setHistory(JSON.parse(h))
+    } catch {}
   }, [])
 
 /* lock body scroll when any lightbox is open */
@@ -228,6 +232,28 @@ export default function PrismApp() {
       img.src = dataUrl
     })
 
+  const compressThumbnail = (dataUrl: string): Promise<string> =>
+    new Promise(resolve => {
+      const img = new Image()
+      img.onload = () => {
+        const MAX = 600
+        let { width, height } = img
+        if (width > MAX || height > MAX) {
+          if (width > height) { height = Math.round((height / width) * MAX); width = MAX }
+          else                { width  = Math.round((width  / height) * MAX); height = MAX }
+        }
+        const canvas = document.createElement('canvas')
+        canvas.width = width; canvas.height = height
+        canvas.getContext('2d')!.drawImage(img, 0, 0, width, height)
+        resolve(canvas.toDataURL('image/jpeg', 0.75))
+      }
+      img.src = dataUrl
+    })
+
+  const saveHistory = (items: HistoryItem[]) => {
+    try { localStorage.setItem('prism-history', JSON.stringify(items)) } catch {}
+  }
+
   const transform = async () => {
     if (!src || busy) return
     setBusy(true); setErr(null)
@@ -247,7 +273,13 @@ export default function PrismApp() {
       const fullImg = `data:${d.mimeType};base64,${d.image}`
       setResult({ img: fullImg, mime: d.mimeType })
       setViewIdx(1)
-      setHistory(prev => [{ id: `h${Date.now()}`, img: fullImg, mime: d.mimeType ?? 'image/jpeg', ts: Date.now() }, ...prev])
+      const thumb = await compressThumbnail(fullImg)
+      const item: HistoryItem = { id: `h${Date.now()}`, img: thumb, mime: 'image/jpeg', ts: Date.now() }
+      setHistory(prev => {
+        const next = [item, ...prev].slice(0, 30)
+        saveHistory(next)
+        return next
+      })
     } catch (e) {
       setErr(e instanceof Error ? e.message : 'Something went wrong.')
     } finally {
@@ -568,31 +600,27 @@ export default function PrismApp() {
 
                 {/* Processing overlay */}
                 {busy && (
-                  <div className="absolute inset-0 overflow-hidden" style={{ background: 'rgba(0,0,0,0.38)' }}>
-                    {/* Aurora — blue */}
-                    <div className="absolute animate-aurora"
-                      style={{
-                        inset: '-30%',
-                        background: 'radial-gradient(ellipse at 45% 55%, rgba(59,130,246,0.55) 0%, transparent 58%)',
-                        filter: 'blur(30px)',
-                      }} />
-                    {/* Aurora — indigo */}
-                    <div className="absolute animate-aurora-alt"
-                      style={{
-                        inset: '-30%',
-                        background: 'radial-gradient(ellipse at 65% 38%, rgba(99,102,241,0.45) 0%, transparent 52%)',
-                        filter: 'blur(36px)',
-                      }} />
-                    {/* Prismatic shimmer sweep */}
-                    <div className="absolute inset-y-0 w-[60%] animate-prism-sweep pointer-events-none"
-                      style={{
-                        background: 'linear-gradient(to right, transparent 0%, rgba(59,130,246,0.1) 18%, rgba(147,197,253,0.32) 36%, rgba(255,255,255,0.22) 50%, rgba(167,139,250,0.28) 64%, rgba(99,102,241,0.1) 82%, transparent 100%)',
-                        filter: 'blur(6px)',
-                      }} />
-                    {/* Label */}
-                    <div className="absolute bottom-5 inset-x-0 flex justify-center">
-                      <span className="text-[11px] font-semibold tracking-[0.28em] uppercase text-white/55">Enhancing</span>
+                  <div className="absolute inset-0 flex flex-col items-center justify-center overflow-hidden"
+                    style={{ background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(6px)', WebkitBackdropFilter: 'blur(6px)' }}>
+                    {/* Sonar rings */}
+                    <div className="relative flex items-center justify-center mb-5">
+                      <div className="absolute w-16 h-16 rounded-full animate-ring-pulse"
+                        style={{ border: '1px solid rgba(147,197,253,0.4)' }} />
+                      <div className="absolute w-16 h-16 rounded-full animate-ring-pulse"
+                        style={{ border: '1px solid rgba(147,197,253,0.3)', animationDelay: '1.3s' }} />
+                      <div className="absolute w-16 h-16 rounded-full"
+                        style={{ border: '1px solid rgba(255,255,255,0.06)' }} />
+                      <div className="w-7 h-7 rounded-full animate-spin-elegant"
+                        style={{
+                          border: '1.5px solid transparent',
+                          borderTopColor: 'rgba(147,197,253,0.8)',
+                          borderRightColor: 'rgba(147,197,253,0.2)',
+                        }} />
                     </div>
+                    <span className="text-[10px] font-semibold tracking-[0.35em] uppercase"
+                      style={{ color: 'rgba(255,255,255,0.28)' }}>
+                      Enhancing
+                    </span>
                   </div>
                 )}
               </>
@@ -839,7 +867,7 @@ export default function PrismApp() {
             <div className="flex items-center justify-between mb-3 px-0.5">
               <p className="text-[10px] font-semibold tracking-[0.28em] uppercase text-white/30">History</p>
               <button
-                onClick={() => setHistory([])}
+                onClick={() => { setHistory([]); saveHistory([]) }}
                 className="text-[10px] font-semibold tracking-wider uppercase text-red-400/50 hover:text-red-400 transition-colors">
                 Delete All
               </button>
@@ -856,7 +884,7 @@ export default function PrismApp() {
                   <div className="absolute inset-0 pointer-events-none"
                     style={{ background: 'linear-gradient(to bottom, rgba(0,0,0,0.35) 0%, transparent 45%)' }} />
                   <button
-                    onClick={e => { e.stopPropagation(); setHistory(prev => prev.filter(h => h.id !== item.id)) }}
+                    onClick={e => { e.stopPropagation(); setHistory(prev => { const next = prev.filter(h => h.id !== item.id); saveHistory(next); return next }) }}
                     className="absolute top-1.5 right-1.5 w-6 h-6 rounded-full flex items-center justify-center z-10 text-white/80 hover:text-white transition-colors"
                     style={{ background: 'rgba(0,0,0,0.55)', backdropFilter: 'blur(8px)' }}>
                     <CloseIcon size={9} />
