@@ -4,7 +4,7 @@ import { useState, useCallback, useRef, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 
 /* ─── Types ─────────────────────────────────────────────── */
-type AR  = 'auto' | '1:1' | '2:3' | '3:2' | '9:16' | '16:9'
+type AR  = 'auto' | '1:1' | '3:4' | '4:3' | '2:3' | '3:2' | '9:16' | '16:9'
 type Res = '1k' | '2k' | '4k'
 interface CustomStyle { id: string; name: string; prompt: string }
 
@@ -46,12 +46,14 @@ const PRESETS = [
 ] as const
 
 const RATIOS: { value: AR; label: string; px: number; py: number }[] = [
-  { value: 'auto', label: 'Auto', px: 20, py: 20 },
-  { value: '1:1',  label: '1:1',  px: 20, py: 20 },
-  { value: '2:3',  label: '2:3',  px: 15, py: 22 },
-  { value: '3:2',  label: '3:2',  px: 22, py: 15 },
-  { value: '9:16', label: '9:16', px: 12, py: 22 },
-  { value: '16:9', label: '16:9', px: 22, py: 12 },
+  { value: 'auto', label: 'Auto', px: 14, py: 14 },
+  { value: '1:1',  label: '1:1',  px: 14, py: 14 },
+  { value: '3:4',  label: '3:4',  px: 11, py: 14 },
+  { value: '4:3',  label: '4:3',  px: 14, py: 11 },
+  { value: '2:3',  label: '2:3',  px:  9, py: 14 },
+  { value: '3:2',  label: '3:2',  px: 14, py:  9 },
+  { value: '9:16', label: '9:16', px:  8, py: 14 },
+  { value: '16:9', label: '16:9', px: 14, py:  8 },
 ]
 
 /* ─── Animation helper ──────────────────────────────────── */
@@ -683,24 +685,22 @@ export default function PrismApp() {
           {/* Aspect Ratio */}
           <div className="mb-4">
             <p className="text-[10px] font-semibold tracking-[0.28em] uppercase text-white/28 mb-3">Aspect Ratio</p>
-            <div className="flex gap-2 flex-wrap">
+            <div className="grid grid-cols-6 gap-1.5">
               {RATIOS.map(r => {
                 const active = ar === r.value
                 return (
                   <button key={r.value} onClick={() => setAr(r.value)}
-                    className="flex flex-col items-center gap-1.5 px-3 py-2.5 rounded-[12px] transition-all"
+                    className="flex flex-col items-center justify-center gap-1.5 h-[54px] rounded-[10px]"
                     style={{
                       background: active ? B.dimmer : 'rgba(255,255,255,0.04)',
                       border: active ? `1.5px solid ${B.border}` : '1.5px solid rgba(255,255,255,0.07)',
                     }}>
-                    <div className="rounded-[3px]"
+                    <div className="rounded-[2px]"
                       style={{
                         width: r.px, height: r.py,
-                        minWidth: 10, minHeight: 10,
                         background: active ? B.full : 'rgba(255,255,255,0.2)',
-                        transition: 'background .2s',
                       }} />
-                    <span className="text-[9px] font-bold tracking-wide"
+                    <span className="text-[8px] font-bold tracking-wide"
                       style={{ color: active ? B.text : 'rgba(255,255,255,0.4)' }}>
                       {r.label}
                     </span>

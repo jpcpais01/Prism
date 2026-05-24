@@ -40,7 +40,8 @@ export async function POST(req: NextRequest) {
     // Native API params for resolution and aspect ratio
     const resMap: Record<string, string> = { '1k': '1K', '2k': '2K', '4k': '4K' }
     const arMap:  Record<string, string> = {
-      '1:1': '1:1', '2:3': '2:3', '3:2': '3:2', '9:16': '9:16', '16:9': '16:9',
+      '1:1': '1:1', '3:4': '3:4', '4:3': '4:3',
+      '2:3': '2:3', '3:2': '3:2', '9:16': '9:16', '16:9': '16:9',
     }
     const imageConfig: Record<string, string> = { imageSize: resMap[resolution] ?? '2K' }
     if (arMap[aspectRatio]) imageConfig.aspectRatio = arMap[aspectRatio]
