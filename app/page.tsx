@@ -27,28 +27,32 @@ const PRESETS = [
     name: 'High Quality',
     desc: 'Professional DSLR remaster',
     prompt: "Remaster as a professional DSLR photograph. Enhance dynamic range, color grading, contrast, and sharpness. Improve lighting consistency and reduce noise. Preserve all original subjects, composition, and scene details exactly, don't add anything. Photorealistic, editorial quality.",
-    from: '#f6d365', to: '#fda085', glyph: '✦',
+    img: '/HighQuality_Style.jpg',
+    from: '#f6d365', to: '#fda085',
   },
   {
     id: 'cinematic',
     name: 'Cinematic',
     desc: 'Movie-quality film look',
     prompt: "Transform into a cinematic movie still with professional color grading. Apply anamorphic lens quality, rich shadows, subtle film grain, and dramatic highlights. Preserve all subjects and composition exactly. Epic, atmospheric, Hollywood quality.",
-    from: '#667eea', to: '#764ba2', glyph: '◈',
+    img: '/Cinematic_Style.jpg',
+    from: '#667eea', to: '#764ba2',
   },
   {
     id: 'vivid',
     name: 'Vivid',
     desc: 'Vibrant, punchy colors',
     prompt: "Enhance with vivid, vibrant color grading. Dramatically boost saturation and contrast while keeping the image natural. Make every color pop. Preserve all subjects and composition exactly. Eye-catching, vibrant, magazine-quality.",
-    from: '#f093fb', to: '#f5576c', glyph: '◉',
+    img: '/Vivid_Style.jpg',
+    from: '#f093fb', to: '#f5576c',
   },
   {
     id: 'macro',
     name: 'Macro',
     desc: 'Ultra-sharp close-up detail',
     prompt: "Remaster as a professional macro photograph. Dramatically enhance fine surface textures, micro-details, and sharpness. Apply a shallow depth-of-field with a smooth, creamy bokeh background that isolates the subject. Boost clarity and micro-contrast so every minute detail pops. Preserve the original subject and composition exactly. Studio-quality macro, nature or product photography aesthetic.",
-    from: '#43e97b', to: '#38f9d7', glyph: '⬡',
+    img: '/Macro_Style.jpg',
+    from: '#43e97b', to: '#38f9d7',
   },
 ] as const
 
@@ -570,26 +574,31 @@ export default function PrismApp() {
                 <motion.button key={p.id}
                   onClick={() => { setStyle(p.id); setCustomSel(null) }}
                   whileTap={{ scale: 0.94 }}
-                  className="flex-shrink-0 w-[118px] rounded-[18px] p-3.5 text-left relative overflow-hidden transition-all"
+                  className="flex-shrink-0 w-[118px] h-[112px] rounded-[18px] text-left relative overflow-hidden"
                   style={{
-                    background: active ? `linear-gradient(145deg, ${p.from}20, ${p.to}20)` : 'rgba(255,255,255,0.04)',
-                    border: active ? `1.5px solid ${p.from}65` : '1.5px solid rgba(255,255,255,0.07)',
-                    boxShadow: active ? `0 0 24px ${p.from}18` : 'none',
+                    backgroundImage: `url(${p.img})`,
+                    backgroundSize: 'cover',
+                    backgroundPosition: 'center',
+                    border: active ? `2px solid ${p.from}` : '1.5px solid rgba(255,255,255,0.1)',
+                    boxShadow: active ? `0 0 20px ${p.from}55` : 'none',
                   }}>
-                  <div className="w-8 h-8 rounded-[9px] mb-2.5 flex items-center justify-center text-base font-black"
-                    style={{ background: `linear-gradient(135deg, ${p.from}, ${p.to})` }}>
-                    <span style={{ filter: 'drop-shadow(0 0 3px rgba(0,0,0,0.5))' }}>{p.glyph}</span>
-                  </div>
-                  <p className="text-[12px] font-bold text-white/90 leading-tight mb-0.5">{p.name}</p>
-                  <p className="text-[10px] text-white/38 leading-snug">{p.desc}</p>
+                  {/* Dark gradient overlay */}
+                  <div className="absolute inset-0"
+                    style={{ background: 'linear-gradient(to bottom, rgba(0,0,0,0.08) 0%, rgba(0,0,0,0.55) 55%, rgba(0,0,0,0.82) 100%)' }} />
+                  {/* Active check */}
                   {active && (
-                    <div className="absolute top-2.5 right-2.5 w-[14px] h-[14px] rounded-full flex items-center justify-center"
+                    <div className="absolute top-2 right-2 w-[16px] h-[16px] rounded-full flex items-center justify-center z-10"
                       style={{ background: `linear-gradient(135deg, ${p.from}, ${p.to})` }}>
-                      <svg width="7" height="7" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round">
+                      <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round">
                         <polyline points="20 6 9 17 4 12"/>
                       </svg>
                     </div>
                   )}
+                  {/* Text */}
+                  <div className="absolute bottom-0 inset-x-0 p-2.5 z-10">
+                    <p className="text-[12px] font-bold text-white leading-tight mb-0.5">{p.name}</p>
+                    <p className="text-[9px] text-white/60 leading-snug">{p.desc}</p>
+                  </div>
                 </motion.button>
               )
             })}
