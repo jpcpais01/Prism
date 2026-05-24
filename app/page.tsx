@@ -583,14 +583,31 @@ export default function PrismApp() {
                         background: 'radial-gradient(ellipse at 65% 38%, rgba(99,102,241,0.45) 0%, transparent 52%)',
                         filter: 'blur(36px)',
                       }} />
-                    {/* Drifting orb */}
-                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 animate-orb-drift pointer-events-none">
-                      <div style={{
-                        width: 88, height: 88, borderRadius: '50%',
-                        background: 'radial-gradient(circle, rgba(255,255,255,0.95) 0%, rgba(147,197,253,0.75) 28%, rgba(59,130,246,0.35) 58%, transparent 75%)',
-                        filter: 'blur(9px)',
-                      }} />
-                    </div>
+                    {/* Twinkling crystal particles */}
+                    {([
+                      { x:'18%', y:'11%', s:3,   d:'0s',    r:6,  c:'255,255,255'  },
+                      { x:'74%', y:'17%', s:4.5, d:'0.6s',  r:9,  c:'147,197,253'  },
+                      { x:'40%', y:'30%', s:2.5, d:'1.2s',  r:5,  c:'255,255,255'  },
+                      { x:'87%', y:'44%', s:3.5, d:'0.2s',  r:7,  c:'167,139,250'  },
+                      { x:'10%', y:'57%', s:4,   d:'1.8s',  r:8,  c:'147,197,253'  },
+                      { x:'57%', y:'63%', s:2.5, d:'0.9s',  r:5,  c:'255,255,255'  },
+                      { x:'27%', y:'76%', s:3,   d:'1.4s',  r:6,  c:'167,139,250'  },
+                      { x:'79%', y:'82%', s:4,   d:'0.4s',  r:8,  c:'147,197,253'  },
+                      { x:'50%', y:'91%', s:2.5, d:'2.2s',  r:5,  c:'255,255,255'  },
+                      { x:'33%', y:'22%', s:2,   d:'1.6s',  r:4,  c:'147,197,253'  },
+                      { x:'63%', y:'48%', s:3,   d:'0.7s',  r:6,  c:'255,255,255'  },
+                      { x:'22%', y:'90%', s:3.5, d:'1.0s',  r:7,  c:'167,139,250'  },
+                    ] as const).map((p, i) => (
+                      <div key={i} className="absolute pointer-events-none rounded-full"
+                        style={{
+                          left: p.x, top: p.y,
+                          width: p.s, height: p.s,
+                          marginLeft: -p.s / 2, marginTop: -p.s / 2,
+                          background: `rgba(${p.c},1)`,
+                          boxShadow: `0 0 ${p.r}px ${p.s}px rgba(${p.c},0.7), 0 0 ${p.r*3}px ${p.s*2}px rgba(${p.c},0.25)`,
+                          animation: `twinkle 2.4s ease-in-out infinite ${p.d}`,
+                        }} />
+                    ))}
                     {/* Label */}
                     <div className="absolute bottom-5 inset-x-0 flex justify-center">
                       <span className="text-[11px] font-semibold tracking-[0.28em] uppercase text-white/55">Enhancing</span>
