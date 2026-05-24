@@ -37,12 +37,13 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Image and prompt are required.' }, { status: 400 })
     }
 
-    const aspectNote =
-      aspectRatio === 'auto'
-        ? 'Preserve the original aspect ratio of the image exactly.'
-        : `Output the image with ${aspectRatio} aspect ratio.`
-
-    const fullPrompt = aspectNote ? `${prompt}\n\n${aspectNote}` : prompt
+    // Native API params for resolution and aspect ratio
+    const resMap: Record<string, string> = { '1k': '1K', '2k': '2K', '4k': '4K' }
+    const arMap:  Record<string, string> = {
+      '1:1': '1:1', '2:3': '2:3', '3:2': '3:2', '9:16': '9:16', '16:9': '16:9',
+    }
+    const imageConfig: Record<string, string> = { imageSize: resMap[resolution] ?? '2K' }
+    if (arMap[aspectRatio]) imageConfig.aspectRatio = arMap[aspectRatio]
 
     const model = process.env.GEMINI_MODEL ?? 'gemini-2.0-flash-preview-image-generation'
     const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`
@@ -55,13 +56,14 @@ export async function POST(req: NextRequest) {
           {
             role: 'user',
             parts: [
-              { text: fullPrompt },
+              { text: prompt },
               { inline_data: { mime_type: mimeType ?? 'image/jpeg', data: image } },
             ],
           },
         ],
         generationConfig: {
           responseModalities: ['IMAGE', 'TEXT'],
+          imageConfig,
         },
       }),
     })
