@@ -7,6 +7,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 type AR  = 'auto' | '1:1' | '3:4' | '4:3' | '2:3' | '3:2' | '9:16' | '16:9'
 type Res = '1k' | '2k' | '4k'
 interface CustomStyle { id: string; name: string; prompt: string }
+interface HistoryItem  { id: string; img: string; mime: string; ts: number }
 
 /* ─── Blue accent token ─────────────────────────────────── */
 const B = {
@@ -158,6 +159,8 @@ export default function PrismApp() {
   const [viewIdx,    setViewIdx]    = useState(0)   // 0=original 1=result
   const [lightbox,   setLightbox]   = useState(false)
   const [progress,   setProgress]   = useState(0)
+  const [history,    setHistory]    = useState<HistoryItem[]>([])
+  const [historyView,setHistoryView]= useState<HistoryItem | null>(null)
 
   const fileRef = useRef<HTMLInputElement>(null)
 
@@ -178,16 +181,16 @@ export default function PrismApp() {
     return () => { clearTimeout(t1); clearTimeout(t2); clearTimeout(t3) }
   }, [busy])
 
-  /* lock body scroll when lightbox is open */
+  /* lock body scroll when any lightbox is open */
   useEffect(() => {
-    document.body.style.overflow = lightbox ? 'hidden' : ''
+    document.body.style.overflow = (lightbox || !!historyView) ? 'hidden' : ''
     return () => { document.body.style.overflow = '' }
-  }, [lightbox])
+  }, [lightbox, historyView])
 
   /* close lightbox on Escape */
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setLightbox(false)
+      if (e.key === 'Escape') { setLightbox(false); setHistoryView(null) }
       if (e.key === 'ArrowLeft'  && result) setViewIdx(0)
       if (e.key === 'ArrowRight' && result) setViewIdx(1)
     }
@@ -257,8 +260,10 @@ export default function PrismApp() {
       catch { throw new Error('Image may be too large. Try a smaller photo.') }
       if (!r.ok) throw new Error(d.error ?? 'Processing failed.')
       if (!d.image || !d.mimeType) throw new Error('No image returned.')
-      setResult({ img: `data:${d.mimeType};base64,${d.image}`, mime: d.mimeType })
+      const fullImg = `data:${d.mimeType};base64,${d.image}`
+      setResult({ img: fullImg, mime: d.mimeType })
       setViewIdx(1)
+      setHistory(prev => [{ id: `h${Date.now()}`, img: fullImg, mime: d.mimeType, ts: Date.now() }, ...prev])
     } catch (e) {
       setErr(e instanceof Error ? e.message : 'Something went wrong.')
     } finally {
@@ -307,6 +312,36 @@ export default function PrismApp() {
   return (
     <main className="min-h-svh bg-black text-white overflow-x-hidden selection:bg-blue-500/30">
       <Orbs />
+
+      {/* ═══════ HISTORY LIGHTBOX ═══════ */}
+      {historyView && (
+        <div className="fixed inset-0 z-50 bg-black/95 flex flex-col" onClick={() => setHistoryView(null)}>
+          <div className="flex items-center justify-between px-5 pt-12 pb-3 flex-shrink-0" onClick={e => e.stopPropagation()}>
+            <span className="text-sm font-semibold text-white/50">Enhanced</span>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => { const a = document.createElement('a'); a.href = historyView.img; a.download = `prism-${historyView.ts}.jpg`; a.click() }}
+                className="w-9 h-9 rounded-full flex items-center justify-center text-white/70 hover:text-white transition-colors"
+                style={{ background: 'rgba(255,255,255,0.08)' }}>
+                <DownloadIcon />
+              </button>
+              <button onClick={() => setHistoryView(null)}
+                className="w-9 h-9 rounded-full flex items-center justify-center text-white/70 hover:text-white transition-colors"
+                style={{ background: 'rgba(255,255,255,0.08)' }}>
+                <CloseIcon size={16} />
+              </button>
+            </div>
+          </div>
+          <div className="flex-1 flex items-center justify-center px-4" onClick={e => e.stopPropagation()}>
+            <img
+              src={historyView.img}
+              alt="Enhanced"
+              className="max-h-full max-w-full object-contain rounded-xl"
+              style={{ maxHeight: 'calc(100svh - 140px)' }}
+            />
+          </div>
+        </div>
+      )}
 
       {/* ═══════ LIGHTBOX ═══════ */}
       <AnimatePresence>
@@ -796,6 +831,40 @@ export default function PrismApp() {
             </div>
           </div>
         </motion.section>
+
+        {/* ═══════ HISTORY ═══════ */}
+        {history.length > 0 && (
+          <motion.section {...fadeUp(0.1)} className="mt-2 mb-4">
+            <div className="flex items-center justify-between mb-3 px-0.5">
+              <p className="text-[10px] font-semibold tracking-[0.28em] uppercase text-white/30">History</p>
+              <button
+                onClick={() => setHistory([])}
+                className="text-[10px] font-semibold tracking-wider uppercase text-red-400/50 hover:text-red-400 transition-colors">
+                Delete All
+              </button>
+            </div>
+            <div className="grid grid-cols-3 gap-2">
+              {history.map(item => (
+                <div key={item.id} className="relative rounded-[14px] overflow-hidden" style={{ aspectRatio: '1/1' }}>
+                  <img
+                    src={item.img}
+                    alt="Enhanced"
+                    className="w-full h-full object-cover cursor-pointer"
+                    onClick={() => setHistoryView(item)}
+                  />
+                  <div className="absolute inset-0 pointer-events-none"
+                    style={{ background: 'linear-gradient(to bottom, rgba(0,0,0,0.35) 0%, transparent 45%)' }} />
+                  <button
+                    onClick={e => { e.stopPropagation(); setHistory(prev => prev.filter(h => h.id !== item.id)) }}
+                    className="absolute top-1.5 right-1.5 w-6 h-6 rounded-full flex items-center justify-center z-10 text-white/80 hover:text-white transition-colors"
+                    style={{ background: 'rgba(0,0,0,0.55)', backdropFilter: 'blur(8px)' }}>
+                    <CloseIcon size={9} />
+                  </button>
+                </div>
+              ))}
+            </div>
+          </motion.section>
+        )}
 
       </div>
     </main>
