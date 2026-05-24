@@ -5,12 +5,12 @@ export const maxDuration = 60
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json()
-    const { image, mimeType, prompt, aspectRatio, resolution, apiKey: clientKey } = body
+    const { image, mimeType, prompt, aspectRatio, resolution } = body
 
-    const apiKey = clientKey || process.env.GEMINI_API_KEY
+    const apiKey = process.env.GEMINI_API_KEY
     if (!apiKey) {
       return NextResponse.json(
-        { error: 'No API key found. Add your Google AI Studio key in the settings or set GEMINI_API_KEY in Vercel environment variables.' },
+        { error: 'GEMINI_API_KEY is not configured. Add it to your Vercel environment variables.' },
         { status: 401 }
       )
     }

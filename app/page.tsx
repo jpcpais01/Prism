@@ -83,18 +83,7 @@ const CloseIcon = ({ size = 14 }: { size?: number }) => (
     <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
   </svg>
 )
-const KeyIcon = () => (
-  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <circle cx="7.5" cy="15.5" r="5.5"/>
-    <path d="M21 2l-9.6 9.6"/><path d="M15.5 7.5l3 3L22 7l-3-3"/>
-  </svg>
-)
-const ChevronIcon = ({ open }: { open: boolean }) => (
-  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"
-    style={{ transform: open ? 'rotate(180deg)' : 'none', transition: 'transform 0.25s' }}>
-    <polyline points="6 9 12 15 18 9"/>
-  </svg>
-)
+
 const PenIcon = () => (
   <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/>
@@ -136,8 +125,6 @@ export default function PrismApp() {
   const [showAdd,   setShowAdd]   = useState(false)
   const [newName,   setNewName]   = useState('')
   const [newPrompt, setNewPrompt] = useState('')
-  const [apiKey,    setApiKey]    = useState('')
-  const [showKey,   setShowKey]   = useState(false)
   const [showOrig,  setShowOrig]  = useState(false)
   const [progress,  setProgress]  = useState(0)
 
@@ -148,8 +135,6 @@ export default function PrismApp() {
     try {
       const c = localStorage.getItem('prism-customs')
       if (c) setCustoms(JSON.parse(c))
-      const k = localStorage.getItem('prism-key')
-      if (k) setApiKey(k)
     } catch {}
   }, [])
 
@@ -196,7 +181,7 @@ export default function PrismApp() {
       const r = await fetch('/api/edit', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ image: base64, mimeType: srcMime, prompt: activePrompt(), aspectRatio: ar, resolution: res, apiKey: apiKey || undefined }),
+        body: JSON.stringify({ image: base64, mimeType: srcMime, prompt: activePrompt(), aspectRatio: ar, resolution: res }),
       })
       const d = await r.json()
       if (!r.ok) throw new Error(d.error)
@@ -227,8 +212,6 @@ export default function PrismApp() {
     localStorage.setItem('prism-customs', JSON.stringify(next))
     if (customSel === id) { setCustomSel(null); setStyle('high-quality') }
   }
-
-  const saveKey = () => { localStorage.setItem('prism-key', apiKey); setShowKey(false) }
 
   const download = () => {
     if (!result) return
@@ -569,54 +552,6 @@ export default function PrismApp() {
             </div>
           </div>
         </motion.section>
-
-        {/* ═══════ API KEY ═══════ */}
-        <motion.div {...fadeUp(0.3)} className="mb-5">
-          <button
-            onClick={() => setShowKey(v => !v)}
-            className="w-full flex items-center justify-between px-4 py-3 rounded-[16px] text-sm transition-all"
-            style={{
-              background: 'rgba(255,255,255,0.03)',
-              border: '1px solid rgba(255,255,255,0.07)',
-              color: apiKey ? 'rgba(100,255,180,0.75)' : 'rgba(255,255,255,0.3)',
-            }}>
-            <span className="flex items-center gap-2 font-medium">
-              <KeyIcon />
-              {apiKey ? 'API key configured ✓' : 'Set API key (optional)'}
-            </span>
-            <ChevronIcon open={showKey} />
-          </button>
-
-          <AnimatePresence>
-            {showKey && (
-              <motion.div
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: 'auto' }}
-                exit={{ opacity: 0, height: 0 }}
-                className="overflow-hidden">
-                <div className="pt-2 px-0.5">
-                  <p className="text-[11px] text-white/28 mb-2.5 leading-relaxed">
-                    Your Google AI Studio key. Stored locally in your browser — never sent to any server other than Google.
-                  </p>
-                  <div className="flex gap-2">
-                    <input
-                      type="password" placeholder="AIza…" value={apiKey} onChange={e => setApiKey(e.target.value)}
-                      className="flex-1 rounded-xl px-3.5 py-2.5 text-sm text-white placeholder:text-white/22 outline-none font-mono transition-colors"
-                      style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)' }}
-                      onFocus={e => (e.target.style.borderColor = 'rgba(155,77,255,0.5)')}
-                      onBlur={e => (e.target.style.borderColor = 'rgba(255,255,255,0.1)')}
-                    />
-                    <button onClick={saveKey}
-                      className="px-4 py-2 rounded-xl text-sm font-semibold transition-opacity"
-                      style={{ background: 'rgba(155,77,255,0.22)', border: '1px solid rgba(155,77,255,0.35)', color: 'rgba(200,150,255,1)' }}>
-                      Save
-                    </button>
-                  </div>
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </motion.div>
 
         {/* ═══════ ERROR BANNER ═══════ */}
         <AnimatePresence>
