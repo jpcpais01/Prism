@@ -43,6 +43,13 @@ const PRESETS = [
     prompt: "Enhance with vivid, vibrant color grading. Dramatically boost saturation and contrast while keeping the image natural. Make every color pop. Preserve all subjects and composition exactly. Eye-catching, vibrant, magazine-quality.",
     from: '#f093fb', to: '#f5576c', glyph: '◉',
   },
+  {
+    id: 'macro',
+    name: 'Macro',
+    desc: 'Ultra-sharp close-up detail',
+    prompt: "Remaster as a professional macro photograph. Dramatically enhance fine surface textures, micro-details, and sharpness. Apply a shallow depth-of-field with a smooth, creamy bokeh background that isolates the subject. Boost clarity and micro-contrast so every minute detail pops. Preserve the original subject and composition exactly. Studio-quality macro, nature or product photography aesthetic.",
+    from: '#43e97b', to: '#38f9d7', glyph: '⬡',
+  },
 ] as const
 
 const RATIOS: { value: AR; label: string; px: number; py: number }[] = [
