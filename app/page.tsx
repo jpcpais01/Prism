@@ -412,7 +412,7 @@ export default function PrismApp() {
 
         {/* ═══════ HEADER ═══════ */}
         <motion.header {...fadeUp(0)} className="text-center mb-4">
-          <h1 className="text-sm font-black tracking-tight text-white">Prism</h1>
+          <h1 className="text-[28px] font-black tracking-tight text-white">Prism</h1>
         </motion.header>
 
         {/* ═══════ IMAGE REGION (2:3) ═══════ */}
