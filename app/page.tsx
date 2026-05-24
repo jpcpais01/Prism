@@ -247,7 +247,7 @@ export default function PrismApp() {
       const fullImg = `data:${d.mimeType};base64,${d.image}`
       setResult({ img: fullImg, mime: d.mimeType })
       setViewIdx(1)
-      setHistory(prev => [{ id: `h${Date.now()}`, img: fullImg, mime: d.mimeType, ts: Date.now() }, ...prev])
+      setHistory(prev => [{ id: `h${Date.now()}`, img: fullImg, mime: d.mimeType ?? 'image/jpeg', ts: Date.now() }, ...prev])
     } catch (e) {
       setErr(e instanceof Error ? e.message : 'Something went wrong.')
     } finally {
