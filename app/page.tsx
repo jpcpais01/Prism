@@ -359,7 +359,6 @@ export default function PrismApp() {
                 </button>
               )}
               <img
-                key={viewIdx}
                 src={currentImg!}
                 alt={viewIdx === 1 ? 'Enhanced' : 'Original'}
                 className="max-h-full max-w-full object-contain rounded-xl"
@@ -381,7 +380,7 @@ export default function PrismApp() {
               <div className="flex justify-center gap-2 py-5 flex-shrink-0">
                 {[0, 1].map(i => (
                   <button key={i} onClick={e => { e.stopPropagation(); setViewIdx(i) }}
-                    className="rounded-full transition-all"
+                    className="rounded-full"
                     style={{
                       width: viewIdx === i ? 20 : 6,
                       height: 6,
@@ -394,11 +393,11 @@ export default function PrismApp() {
         )}
       </AnimatePresence>
 
-      <div className="relative z-10 max-w-[480px] mx-auto px-4 pt-12 pb-20">
+      <div className="relative z-10 max-w-[480px] mx-auto px-4 pt-6 pb-20">
 
         {/* ═══════ HEADER ═══════ */}
-        <motion.header {...fadeUp(0)} className="text-center mb-8">
-          <h1 className="text-2xl font-black tracking-tight text-white">Prism</h1>
+        <motion.header {...fadeUp(0)} className="text-center mb-4">
+          <h1 className="text-sm font-black tracking-tight text-white">Prism</h1>
         </motion.header>
 
         {/* ═══════ IMAGE REGION (2:3) ═══════ */}
@@ -444,7 +443,6 @@ export default function PrismApp() {
               /* ── Image display ── */
               <>
                 <img
-                  key={viewIdx}
                   src={currentImg!}
                   alt={viewIdx === 1 ? 'Enhanced' : 'Original'}
                   className="absolute inset-0 w-full h-full object-cover cursor-pointer"
@@ -476,7 +474,7 @@ export default function PrismApp() {
                   <button
                     onClick={() => setViewIdx(0)}
                     disabled={viewIdx === 0}
-                    className="absolute left-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full flex items-center justify-center transition-all disabled:opacity-20"
+                    className="absolute left-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full flex items-center justify-center disabled:opacity-20"
                     style={{ background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(8px)', border: '1px solid rgba(255,255,255,0.12)' }}>
                     <ArrowLeftIcon />
                   </button>
@@ -487,7 +485,7 @@ export default function PrismApp() {
                   <button
                     onClick={() => setViewIdx(1)}
                     disabled={viewIdx === 1}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full flex items-center justify-center transition-all disabled:opacity-20"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full flex items-center justify-center disabled:opacity-20"
                     style={{ background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(8px)', border: '1px solid rgba(255,255,255,0.12)' }}>
                     <ArrowRightIcon />
                   </button>
@@ -501,7 +499,7 @@ export default function PrismApp() {
                       <>
                         {[0, 1].map(i => (
                           <button key={i} onClick={() => setViewIdx(i)}
-                            className="rounded-full transition-all"
+                            className="rounded-full"
                             style={{
                               width: viewIdx === i ? 18 : 5,
                               height: 5,
