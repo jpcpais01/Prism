@@ -15,6 +15,7 @@ body {
   min-height: 100svh;
   overflow-x: hidden;
   -webkit-font-smoothing: antialiased;
+  scrollbar-width: none;
 }
 
 /* ── Scrollbar ──────────────────────────────────── */

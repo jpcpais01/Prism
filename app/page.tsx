@@ -174,6 +174,12 @@ export default function PrismApp() {
     return () => { clearTimeout(t1); clearTimeout(t2); clearTimeout(t3) }
   }, [busy])
 
+  /* lock body scroll when lightbox is open */
+  useEffect(() => {
+    document.body.style.overflow = lightbox ? 'hidden' : ''
+    return () => { document.body.style.overflow = '' }
+  }, [lightbox])
+
   /* close lightbox on Escape */
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
