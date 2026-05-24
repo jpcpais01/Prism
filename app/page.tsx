@@ -173,18 +173,41 @@ export default function PrismApp() {
     return PRESETS.find(p => p.id === style)?.prompt ?? ''
   }
 
+  const compressImage = (dataUrl: string, mime: string): Promise<{ base64: string; mime: string }> =>
+    new Promise(resolve => {
+      const img = new Image()
+      img.onload = () => {
+        const MAX = 2048
+        let { width, height } = img
+        if (width > MAX || height > MAX) {
+          if (width > height) { height = Math.round((height / width) * MAX); width = MAX }
+          else                { width  = Math.round((width  / height) * MAX); height = MAX }
+        }
+        const canvas = document.createElement('canvas')
+        canvas.width = width; canvas.height = height
+        canvas.getContext('2d')!.drawImage(img, 0, 0, width, height)
+        const outMime = 'image/jpeg'
+        const out = canvas.toDataURL(outMime, 0.88)
+        resolve({ base64: out.split(',')[1], mime: outMime })
+      }
+      img.src = dataUrl
+    })
+
   const transform = async () => {
     if (!src || busy) return
     setBusy(true); setErr(null)
     try {
-      const base64 = src.split(',')[1]
+      const { base64, mime: compMime } = await compressImage(src, srcMime)
       const r = await fetch('/api/edit', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ image: base64, mimeType: srcMime, prompt: activePrompt(), aspectRatio: ar, resolution: res }),
+        body: JSON.stringify({ image: base64, mimeType: compMime, prompt: activePrompt(), aspectRatio: ar, resolution: res }),
       })
-      const d = await r.json()
-      if (!r.ok) throw new Error(d.error)
+      let d: { error?: string; image?: string; mimeType?: string }
+      try { d = await r.json() }
+      catch { throw new Error('Image may be too large. Try a smaller photo.') }
+      if (!r.ok) throw new Error(d.error ?? 'Processing failed.')
+      if (!d.image || !d.mimeType) throw new Error('No image returned.')
       setResult({ img: `data:${d.mimeType};base64,${d.image}`, mime: d.mimeType })
       setShowOrig(false)
       setTimeout(() => resultRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 120)
