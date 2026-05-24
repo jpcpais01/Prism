@@ -78,11 +78,13 @@ body::-webkit-scrollbar { display: none; width: 0; }
   66%       { transform: translate(12%,  -14%)  scale(0.94); }
 }
 
-@keyframes scan-down {
-  0%   { top: -3px;  opacity: 0; }
-  8%   {             opacity: 1; }
-  92%  {             opacity: 1; }
-  100% { top: 100%;  opacity: 0; }
+@keyframes orb-drift {
+  0%   { transform: translate( 85px,  -15px); }
+  18%  { transform: translate( 30px,  105px); }
+  36%  { transform: translate(-75px,   55px); }
+  54%  { transform: translate(-85px,  -70px); }
+  72%  { transform: translate( 20px,  -95px); }
+  100% { transform: translate( 85px,  -15px); }
 }
 
 .animate-float       { animation: float 3.2s ease-in-out infinite; }
@@ -91,4 +93,4 @@ body::-webkit-scrollbar { display: none; width: 0; }
 .animate-gradient    { animation: gradient-move 4s ease infinite; background-size: 200% 200%; }
 .animate-aurora      { animation: aurora-move 4.5s ease-in-out infinite; }
 .animate-aurora-alt  { animation: aurora-alt  5.8s ease-in-out infinite; }
-.animate-scan-down   { animation: scan-down   2s   linear          infinite; }
+.animate-orb-drift   { animation: orb-drift   5.5s ease-in-out infinite; }

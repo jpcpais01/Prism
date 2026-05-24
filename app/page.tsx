@@ -583,12 +583,14 @@ export default function PrismApp() {
                         background: 'radial-gradient(ellipse at 65% 38%, rgba(99,102,241,0.45) 0%, transparent 52%)',
                         filter: 'blur(36px)',
                       }} />
-                    {/* Scan line */}
-                    <div className="absolute inset-x-0 h-[2px] animate-scan-down"
-                      style={{
-                        background: 'linear-gradient(to right, transparent 0%, rgba(147,197,253,0.8) 25%, rgba(255,255,255,0.95) 50%, rgba(147,197,253,0.8) 75%, transparent 100%)',
-                        boxShadow: '0 0 10px 4px rgba(147,197,253,0.55), 0 0 28px 8px rgba(59,130,246,0.3)',
+                    {/* Drifting orb */}
+                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 animate-orb-drift pointer-events-none">
+                      <div style={{
+                        width: 88, height: 88, borderRadius: '50%',
+                        background: 'radial-gradient(circle, rgba(255,255,255,0.95) 0%, rgba(147,197,253,0.75) 28%, rgba(59,130,246,0.35) 58%, transparent 75%)',
+                        filter: 'blur(9px)',
                       }} />
+                    </div>
                     {/* Label */}
                     <div className="absolute bottom-5 inset-x-0 flex justify-center">
                       <span className="text-[11px] font-semibold tracking-[0.28em] uppercase text-white/55">Enhancing</span>
