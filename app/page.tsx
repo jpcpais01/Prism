@@ -412,10 +412,10 @@ export default function PrismApp() {
         )}
       </AnimatePresence>
 
-      <div className="relative z-10 max-w-[480px] mx-auto px-4 pt-6 pb-20">
+      <div className="relative z-10 max-w-[480px] mx-auto px-4 pt-3 pb-20">
 
         {/* ═══════ HEADER ═══════ */}
-        <motion.header {...fadeUp(0)} className="text-center mb-4">
+        <motion.header {...fadeUp(0)} className="text-center mb-2">
           <h1 className="text-[28px] font-black tracking-tight text-white">Prism</h1>
         </motion.header>
 
