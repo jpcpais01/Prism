@@ -2,6 +2,24 @@ import { NextRequest, NextResponse } from 'next/server'
 
 export const maxDuration = 60
 
+// Gemini can return either snake_case (REST) or camelCase (SDK) field names
+type GeminiPart =
+  | { text: string }
+  | { inline_data: { mime_type: string; data: string } }
+  | { inlineData:  { mimeType:  string; data: string } }
+
+function extractImage(parts: GeminiPart[]): { data: string; mime: string } | null {
+  for (const p of parts) {
+    if ('inline_data' in p && p.inline_data.mime_type.startsWith('image/')) {
+      return { data: p.inline_data.data, mime: p.inline_data.mime_type }
+    }
+    if ('inlineData' in p && p.inlineData.mimeType.startsWith('image/')) {
+      return { data: p.inlineData.data, mime: p.inlineData.mimeType }
+    }
+  }
+  return null
+}
+
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json()
@@ -29,7 +47,7 @@ export async function POST(req: NextRequest) {
 
     const fullPrompt = `${prompt}\n\n${aspectNote} ${resNote}`
 
-    const model = process.env.GEMINI_MODEL ?? 'gemini-3.1-flash-image-preview'
+    const model = process.env.GEMINI_MODEL ?? 'gemini-2.0-flash-preview-image-generation'
     const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`
 
     const geminiRes = await fetch(url, {
@@ -38,6 +56,7 @@ export async function POST(req: NextRequest) {
       body: JSON.stringify({
         contents: [
           {
+            role: 'user',
             parts: [
               { text: fullPrompt },
               { inline_data: { mime_type: mimeType ?? 'image/jpeg', data: image } },
@@ -57,24 +76,25 @@ export async function POST(req: NextRequest) {
     }
 
     const data = await geminiRes.json()
-    const parts = (data.candidates?.[0]?.content?.parts ?? []) as Array<{
-      text?: string
-      inline_data?: { mime_type: string; data: string }
-    }>
+    const parts: GeminiPart[] = data.candidates?.[0]?.content?.parts ?? []
 
-    const imgPart = parts.find(p => p.inline_data?.mime_type?.startsWith('image/'))
-    if (!imgPart?.inline_data) {
-      const textFallback = parts.find(p => p.text)?.text
+    // Log structure to Vercel logs for debugging
+    console.log('Gemini parts:', JSON.stringify(parts.map(p => {
+      if ('inline_data' in p) return { type: 'inline_data', mime: p.inline_data.mime_type, bytes: p.inline_data.data.length }
+      if ('inlineData'  in p) return { type: 'inlineData',  mime: p.inlineData.mimeType,   bytes: p.inlineData.data.length  }
+      return { type: 'text', preview: ('text' in p ? p.text.slice(0, 80) : '') }
+    })))
+
+    const img = extractImage(parts)
+    if (!img) {
+      const textPart = parts.find((p): p is { text: string } => 'text' in p)
       return NextResponse.json(
-        { error: textFallback ?? 'The model did not return an image. Try a different style or image.' },
+        { error: textPart?.text ?? 'The model did not return an image. Try a different style or image.' },
         { status: 500 }
       )
     }
 
-    return NextResponse.json({
-      image: imgPart.inline_data.data,
-      mimeType: imgPart.inline_data.mime_type,
-    })
+    return NextResponse.json({ image: img.data, mimeType: img.mime })
   } catch (e) {
     console.error('Edit route error:', e)
     return NextResponse.json({ error: 'Internal server error.' }, { status: 500 })
