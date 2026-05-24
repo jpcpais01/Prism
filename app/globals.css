@@ -66,7 +66,29 @@ body::-webkit-scrollbar { display: none; width: 0; }
   100% { background-position: 0%   50%; }
 }
 
+@keyframes aurora-move {
+  0%, 100% { transform: translate(0%,    0%)    scale(1);    }
+  33%       { transform: translate(14%,  -12%)  scale(1.14); }
+  66%       { transform: translate(-10%, 14%)   scale(0.92); }
+}
+
+@keyframes aurora-alt {
+  0%, 100% { transform: translate(0%,    0%)    scale(1);    }
+  33%       { transform: translate(-16%, 10%)   scale(1.1);  }
+  66%       { transform: translate(12%,  -14%)  scale(0.94); }
+}
+
+@keyframes scan-down {
+  0%   { top: -3px;  opacity: 0; }
+  8%   {             opacity: 1; }
+  92%  {             opacity: 1; }
+  100% { top: 100%;  opacity: 0; }
+}
+
 .animate-float       { animation: float 3.2s ease-in-out infinite; }
 .animate-spin-slow   { animation: spin-slow 1.2s linear infinite; }
 .animate-pulse-ring  { animation: pulse-ring 2.4s cubic-bezier(0.455,0.03,0.515,0.955) infinite; }
 .animate-gradient    { animation: gradient-move 4s ease infinite; background-size: 200% 200%; }
+.animate-aurora      { animation: aurora-move 4.5s ease-in-out infinite; }
+.animate-aurora-alt  { animation: aurora-alt  5.8s ease-in-out infinite; }
+.animate-scan-down   { animation: scan-down   2s   linear          infinite; }

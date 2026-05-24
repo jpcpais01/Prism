@@ -125,11 +125,6 @@ const AlertIcon = () => (
     <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
   </svg>
 )
-const SpinnerIcon = () => (
-  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round">
-    <path d="M21 12a9 9 0 11-6.219-8.56"/>
-  </svg>
-)
 const ExpandIcon = () => (
   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/>
@@ -158,7 +153,6 @@ export default function PrismApp() {
   const [extraEdits, setExtraEdits] = useState('')
   const [viewIdx,    setViewIdx]    = useState(0)   // 0=original 1=result
   const [lightbox,   setLightbox]   = useState(false)
-  const [progress,   setProgress]   = useState(0)
   const [history,    setHistory]    = useState<HistoryItem[]>([])
   const [historyView,setHistoryView]= useState<HistoryItem | null>(null)
 
@@ -171,17 +165,7 @@ export default function PrismApp() {
     } catch {}
   }, [])
 
-  /* progress mock */
-  useEffect(() => {
-    if (!busy) { setProgress(0); return }
-    setProgress(8)
-    const t1 = setTimeout(() => setProgress(35), 600)
-    const t2 = setTimeout(() => setProgress(62), 1800)
-    const t3 = setTimeout(() => setProgress(88), 3500)
-    return () => { clearTimeout(t1); clearTimeout(t2); clearTimeout(t3) }
-  }, [busy])
-
-  /* lock body scroll when any lightbox is open */
+/* lock body scroll when any lightbox is open */
   useEffect(() => {
     document.body.style.overflow = (lightbox || !!historyView) ? 'hidden' : ''
     return () => { document.body.style.overflow = '' }
@@ -584,13 +568,30 @@ export default function PrismApp() {
 
                 {/* Processing overlay */}
                 {busy && (
-                  <div className="absolute inset-0 flex flex-col items-center justify-center gap-4"
-                    style={{ background: 'rgba(0,0,0,0.65)', backdropFilter: 'blur(4px)' }}>
-                    <span className="animate-spin-slow"><SpinnerIcon /></span>
-                    <p className="text-sm text-white/70 font-medium">Transforming…</p>
-                    <div className="w-32 h-[3px] rounded-full overflow-hidden" style={{ background: 'rgba(255,255,255,0.12)' }}>
-                      <motion.div className="h-full rounded-full" style={{ background: B.full }}
-                        animate={{ width: `${progress}%` }} transition={{ duration: 0.5, ease: 'easeOut' }} />
+                  <div className="absolute inset-0 overflow-hidden" style={{ background: 'rgba(0,0,0,0.38)' }}>
+                    {/* Aurora — blue */}
+                    <div className="absolute animate-aurora"
+                      style={{
+                        inset: '-30%',
+                        background: 'radial-gradient(ellipse at 45% 55%, rgba(59,130,246,0.55) 0%, transparent 58%)',
+                        filter: 'blur(30px)',
+                      }} />
+                    {/* Aurora — indigo */}
+                    <div className="absolute animate-aurora-alt"
+                      style={{
+                        inset: '-30%',
+                        background: 'radial-gradient(ellipse at 65% 38%, rgba(99,102,241,0.45) 0%, transparent 52%)',
+                        filter: 'blur(36px)',
+                      }} />
+                    {/* Scan line */}
+                    <div className="absolute inset-x-0 h-[2px] animate-scan-down"
+                      style={{
+                        background: 'linear-gradient(to right, transparent 0%, rgba(147,197,253,0.8) 25%, rgba(255,255,255,0.95) 50%, rgba(147,197,253,0.8) 75%, transparent 100%)',
+                        boxShadow: '0 0 10px 4px rgba(147,197,253,0.55), 0 0 28px 8px rgba(59,130,246,0.3)',
+                      }} />
+                    {/* Label */}
+                    <div className="absolute bottom-5 inset-x-0 flex justify-center">
+                      <span className="text-[11px] font-semibold tracking-[0.28em] uppercase text-white/55">Enhancing</span>
                     </div>
                   </div>
                 )}
@@ -755,7 +756,7 @@ export default function PrismApp() {
             }}>
             <span className="relative flex items-center justify-center gap-2.5 text-white">
               {busy ? (
-                <><span className="animate-spin-slow"><SpinnerIcon /></span><span>Transforming…</span></>
+                <span>Transforming…</span>
               ) : (
                 <><WandIcon /><span>Transform</span></>
               )}
