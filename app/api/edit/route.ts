@@ -42,10 +42,7 @@ export async function POST(req: NextRequest) {
         ? 'Preserve the original aspect ratio of the image exactly.'
         : `Output the image with ${aspectRatio} aspect ratio.`
 
-    const resMap: Record<string, string> = { '1k': '1024', '2k': '2048', '4k': '4096' }
-    const resNote = `Target output resolution: ~${resMap[resolution] ?? '2048'}px on the longest side.`
-
-    const fullPrompt = `${prompt}\n\n${aspectNote} ${resNote}`
+    const fullPrompt = aspectNote ? `${prompt}\n\n${aspectNote}` : prompt
 
     const model = process.env.GEMINI_MODEL ?? 'gemini-2.0-flash-preview-image-generation'
     const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`

@@ -203,11 +203,11 @@ export default function PrismApp() {
     return extraEdits.trim() ? `${base}\n\n${extraEdits.trim()}` : base
   }
 
-  const compressImage = (dataUrl: string): Promise<{ base64: string; mime: string }> =>
+  const compressImage = (dataUrl: string, maxPx = 2048): Promise<{ base64: string; mime: string }> =>
     new Promise(resolve => {
       const img = new Image()
       img.onload = () => {
-        const MAX = 2048
+        const MAX = maxPx
         let { width, height } = img
         if (width > MAX || height > MAX) {
           if (width > height) { height = Math.round((height / width) * MAX); width = MAX }
@@ -226,7 +226,8 @@ export default function PrismApp() {
     if (!src || busy) return
     setBusy(true); setErr(null)
     try {
-      const { base64, mime } = await compressImage(src)
+      const maxPx = res === '1k' ? 1024 : res === '4k' ? 4096 : 2048
+      const { base64, mime } = await compressImage(src, maxPx)
       const r = await fetch('/api/edit', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -357,19 +358,13 @@ export default function PrismApp() {
                   <ArrowLeftIcon />
                 </button>
               )}
-              <AnimatePresence mode="wait">
-                <motion.img
-                  key={viewIdx}
-                  initial={{ opacity: 0, scale: 0.97 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.97 }}
-                  transition={{ duration: 0.25 }}
-                  src={currentImg!}
-                  alt={viewIdx === 1 ? 'Enhanced' : 'Original'}
-                  className="max-h-full max-w-full object-contain rounded-xl"
-                  style={{ maxHeight: 'calc(100svh - 140px)' }}
-                />
-              </AnimatePresence>
+              <img
+                key={viewIdx}
+                src={currentImg!}
+                alt={viewIdx === 1 ? 'Enhanced' : 'Original'}
+                className="max-h-full max-w-full object-contain rounded-xl"
+                style={{ maxHeight: 'calc(100svh - 140px)' }}
+              />
               {result && (
                 <button
                   onClick={() => setViewIdx(1)}
@@ -403,7 +398,7 @@ export default function PrismApp() {
 
         {/* ═══════ HEADER ═══════ */}
         <motion.header {...fadeUp(0)} className="text-center mb-8">
-          <h1 className="text-4xl font-black tracking-tight text-white">Prism</h1>
+          <h1 className="text-2xl font-black tracking-tight text-white">Prism</h1>
         </motion.header>
 
         {/* ═══════ IMAGE REGION (2:3) ═══════ */}
@@ -411,8 +406,8 @@ export default function PrismApp() {
           <input ref={fileRef} type="file" accept="image/*" className="hidden"
             onChange={e => e.target.files?.[0] && handleFile(e.target.files[0])} />
 
-          {/* 2:3 wrapper */}
-          <div className="relative rounded-[24px] overflow-hidden" style={{ aspectRatio: '2/3' }}>
+          {/* 3:4 wrapper */}
+          <div className="relative rounded-[24px] overflow-hidden" style={{ aspectRatio: '3/4' }}>
 
             {!src ? (
               /* ── Empty upload zone ── */
@@ -448,18 +443,13 @@ export default function PrismApp() {
             ) : (
               /* ── Image display ── */
               <>
-                <AnimatePresence mode="wait">
-                  <motion.img
-                    key={viewIdx}
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    transition={{ duration: 0.3 }}
-                    src={currentImg!}
-                    alt={viewIdx === 1 ? 'Enhanced' : 'Original'}
-                    className="absolute inset-0 w-full h-full object-cover"
-                  />
-                </AnimatePresence>
+                <img
+                  key={viewIdx}
+                  src={currentImg!}
+                  alt={viewIdx === 1 ? 'Enhanced' : 'Original'}
+                  className="absolute inset-0 w-full h-full object-cover cursor-pointer"
+                  onClick={() => setLightbox(true)}
+                />
 
                 {/* Gradient overlay */}
                 <div className="absolute inset-0 pointer-events-none"
@@ -472,13 +462,8 @@ export default function PrismApp() {
                   Change
                 </button>
 
-                {/* Top-right: expand + clear */}
-                <div className="absolute top-3 right-3 flex gap-1.5">
-                  <button onClick={() => setLightbox(true)}
-                    className="w-8 h-8 rounded-full flex items-center justify-center text-white/70 hover:text-white transition-colors"
-                    style={{ background: 'rgba(0,0,0,0.45)', backdropFilter: 'blur(10px)' }}>
-                    <ExpandIcon />
-                  </button>
+                {/* Top-right: clear */}
+                <div className="absolute top-3 right-3">
                   <button onClick={() => { setSrc(null); setResult(null); setErr(null); setViewIdx(0) }}
                     className="w-8 h-8 rounded-full flex items-center justify-center text-white/70 hover:text-white transition-colors"
                     style={{ background: 'rgba(0,0,0,0.45)', backdropFilter: 'blur(10px)' }}>
