@@ -687,8 +687,49 @@ export default function PrismApp() {
           )}
         </AnimatePresence>
 
+        {/* ═══════ ERROR BANNER ═══════ */}
+        <AnimatePresence>
+          {err && (
+            <motion.div
+              initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }}
+              className="mb-4 px-4 py-3 rounded-[14px] flex items-start gap-3 text-red-300/85"
+              style={{ background: 'rgba(255,60,60,0.09)', border: '1px solid rgba(255,60,60,0.2)' }}>
+              <span className="flex-shrink-0 mt-0.5 text-red-400"><AlertIcon /></span>
+              <p className="text-sm leading-snug">{err}</p>
+              <button onClick={() => setErr(null)} className="flex-shrink-0 ml-auto text-red-400/60 hover:text-red-400 transition-colors">
+                <CloseIcon size={12} />
+              </button>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* ═══════ TRANSFORM BUTTON ═══════ */}
+        <motion.div {...fadeUp(0.18)} className="mb-5">
+          <button
+            onClick={transform}
+            disabled={!src || busy}
+            className="w-full py-4 rounded-[18px] text-base font-black tracking-wide relative overflow-hidden transition-all disabled:cursor-not-allowed"
+            style={{
+              background: src && !busy
+                ? 'linear-gradient(135deg, #1d4ed8 0%, #3b82f6 50%, #60a5fa 100%)'
+                : 'rgba(255,255,255,0.07)',
+              backgroundSize: '200% 200%',
+              boxShadow: src && !busy ? '0 4px 32px rgba(59,130,246,0.35)' : 'none',
+              opacity: !src ? 0.45 : 1,
+              animation: src && !busy ? 'gradient-move 4s ease infinite' : 'none',
+            }}>
+            <span className="relative flex items-center justify-center gap-2.5 text-white">
+              {busy ? (
+                <><span className="animate-spin-slow"><SpinnerIcon /></span><span>Transforming…</span></>
+              ) : (
+                <><WandIcon /><span>Transform</span></>
+              )}
+            </span>
+          </button>
+        </motion.div>
+
         {/* ═══════ EXTRA EDITS ═══════ */}
-        <motion.section {...fadeUp(0.18)} className="mb-4">
+        <motion.section {...fadeUp(0.22)} className="mb-4">
           <p className="text-[10px] font-semibold tracking-[0.28em] uppercase text-white/30 mb-2.5 px-0.5">Extra Instructions</p>
           <textarea
             placeholder="e.g. make the sky more dramatic, add warm sunset tones, sharpen the foreground…"
@@ -755,47 +796,6 @@ export default function PrismApp() {
             </div>
           </div>
         </motion.section>
-
-        {/* ═══════ ERROR BANNER ═══════ */}
-        <AnimatePresence>
-          {err && (
-            <motion.div
-              initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }}
-              className="mb-4 px-4 py-3 rounded-[14px] flex items-start gap-3 text-red-300/85"
-              style={{ background: 'rgba(255,60,60,0.09)', border: '1px solid rgba(255,60,60,0.2)' }}>
-              <span className="flex-shrink-0 mt-0.5 text-red-400"><AlertIcon /></span>
-              <p className="text-sm leading-snug">{err}</p>
-              <button onClick={() => setErr(null)} className="flex-shrink-0 ml-auto text-red-400/60 hover:text-red-400 transition-colors">
-                <CloseIcon size={12} />
-              </button>
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        {/* ═══════ TRANSFORM BUTTON ═══════ */}
-        <motion.div {...fadeUp(0.28)}>
-          <button
-            onClick={transform}
-            disabled={!src || busy}
-            className="w-full py-4 rounded-[18px] text-base font-black tracking-wide relative overflow-hidden transition-all disabled:cursor-not-allowed"
-            style={{
-              background: src && !busy
-                ? 'linear-gradient(135deg, #1d4ed8 0%, #3b82f6 50%, #60a5fa 100%)'
-                : 'rgba(255,255,255,0.07)',
-              backgroundSize: '200% 200%',
-              boxShadow: src && !busy ? '0 4px 32px rgba(59,130,246,0.35)' : 'none',
-              opacity: !src ? 0.45 : 1,
-              animation: src && !busy ? 'gradient-move 4s ease infinite' : 'none',
-            }}>
-            <span className="relative flex items-center justify-center gap-2.5 text-white">
-              {busy ? (
-                <><span className="animate-spin-slow"><SpinnerIcon /></span><span>Transforming…</span></>
-              ) : (
-                <><WandIcon /><span>Transform</span></>
-              )}
-            </span>
-          </button>
-        </motion.div>
 
       </div>
     </main>
