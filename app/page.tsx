@@ -579,15 +579,17 @@ export default function PrismApp() {
                     backgroundImage: `url(${p.img})`,
                     backgroundSize: 'cover',
                     backgroundPosition: 'center',
-                    border: active ? `2px solid ${p.from}` : '1.5px solid rgba(255,255,255,0.1)',
                     boxShadow: active ? `0 0 20px ${p.from}55` : 'none',
                   }}>
-                  {/* Dark gradient overlay */}
+                  {/* Dark gradient overlay — half opacity */}
                   <div className="absolute inset-0"
-                    style={{ background: 'linear-gradient(to bottom, rgba(0,0,0,0.08) 0%, rgba(0,0,0,0.55) 55%, rgba(0,0,0,0.82) 100%)' }} />
+                    style={{ background: 'linear-gradient(to bottom, rgba(0,0,0,0.04) 0%, rgba(0,0,0,0.27) 55%, rgba(0,0,0,0.41) 100%)' }} />
+                  {/* Border ring drawn above overlay so it covers all edges */}
+                  <div className="absolute inset-0 rounded-[18px] pointer-events-none z-20"
+                    style={{ border: active ? `2px solid ${p.from}` : '1.5px solid rgba(255,255,255,0.1)' }} />
                   {/* Active check */}
                   {active && (
-                    <div className="absolute top-2 right-2 w-[16px] h-[16px] rounded-full flex items-center justify-center z-10"
+                    <div className="absolute top-2 right-2 w-[16px] h-[16px] rounded-full flex items-center justify-center z-30"
                       style={{ background: `linear-gradient(135deg, ${p.from}, ${p.to})` }}>
                       <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round">
                         <polyline points="20 6 9 17 4 12"/>
