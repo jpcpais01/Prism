@@ -58,7 +58,7 @@ export default function VideoEditor() {
   const [prompt,   setPrompt]   = useState('')
   const [dragging, setDragging] = useState(false)
   const [busy,     setBusy]     = useState(false)
-  const [result,   setResult]   = useState<{ url: string; mime: string; blob: Blob } | null>(null)
+  const [result,   setResult]   = useState<{ url: string; mime: string } | null>(null)
   const [err,      setErr]      = useState<string | null>(null)
 
   const fileRef = useRef<HTMLInputElement>(null)
@@ -120,7 +120,7 @@ export default function VideoEditor() {
       if (!d.video || !d.mimeType) throw new Error('No video returned.')
 
       const blob = await (await fetch(`data:${d.mimeType};base64,${d.video}`)).blob()
-      setResult({ url: URL.createObjectURL(blob), mime: d.mimeType, blob })
+      setResult({ url: URL.createObjectURL(blob), mime: d.mimeType })
     } catch (e) {
       setErr(e instanceof Error ? e.message : 'Something went wrong.')
     } finally {
@@ -128,23 +128,10 @@ export default function VideoEditor() {
     }
   }
 
-  const download = async () => {
+  const download = () => {
     if (!result) return
-    const filename = `prism-video-${Date.now()}.mp4`
-    // iOS/mobile Safari largely ignores <a download> for blob: URLs, so it looks
-    // like the button does nothing — the Web Share sheet (Save Video) is the
-    // reliable path there. Desktop browsers handle the plain anchor fine.
-    const file = new File([result.blob], filename, { type: result.mime || 'video/mp4' })
-    if (navigator.canShare?.({ files: [file] })) {
-      try {
-        await navigator.share({ files: [file] })
-        return
-      } catch {
-        // user cancelled the share sheet, or share failed — fall through to download
-      }
-    }
     const a = document.createElement('a')
-    a.href = result.url; a.download = filename; a.click()
+    a.href = result.url; a.download = `prism-video-${Date.now()}.mp4`; a.click()
   }
 
   const displayUrl = result?.url ?? srcUrl

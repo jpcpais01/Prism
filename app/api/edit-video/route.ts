@@ -19,6 +19,9 @@ type InteractionStep = {
   content?: InteractionContentPart[]
   error?: { message?: string }
 }
+type InteractionWithOutputVideo = {
+  output_video?: InteractionContentPart
+}
 
 export async function POST(req: NextRequest) {
   try {
@@ -72,24 +75,19 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Video upload failed to process.' }, { status: 500 })
     }
 
-    // 3. Gemini rejects both `duration` and `aspect_ratio` in response_format for
-    // edit tasks (confirmed via live 400s: "... cannot be set in response format
-    // for edit task") — an edited clip keeps the source's length and shape, and
-    // neither is configurable, so response_format only carries type/delivery.
-    const responseFormat = { type: 'video' as const, delivery: 'inline' as const }
-
-    // 4. Run the edit interaction
+    // 3. Run the edit interaction — matches Google's own documented edit example
+    // exactly: the uploaded video is referenced as a `document` part (not `video`),
+    // and no generation_config/response_modalities/response_format is set — the
+    // model infers "edit" from the video+text input on its own. Earlier attempts
+    // that added task/response_modalities/aspect_ratio/duration either got rejected
+    // outright (aspect_ratio and duration both 400 for edit tasks) or may have been
+    // contributing to the model not preserving the source clip's orientation.
     const interaction = await ai.interactions.create({
       model,
       input: [
-        { type: 'video', uri: uploaded.uri, mime_type: uploaded.mimeType ?? 'video/mp4' },
+        { type: 'document', uri: uploaded.uri, mime_type: uploaded.mimeType ?? 'video/mp4' },
         { type: 'text', text: prompt },
       ],
-      generation_config: {
-        video_config: { task: 'edit' },
-      },
-      response_modalities: ['video'],
-      response_format: responseFormat,
     })
 
     // Best-effort cleanup of the uploaded source file
@@ -99,14 +97,16 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'The model could not complete this edit.' }, { status: 500 })
     }
 
-    const steps = (interaction.steps ?? []) as InteractionStep[]
-    let videoPart: InteractionContentPart | undefined
+    // Per Google's docs, the SDK exposes the result directly as output_video —
+    // fall back to walking steps (the raw shape) if that's ever absent.
+    let videoPart: InteractionContentPart | undefined = (interaction as InteractionWithOutputVideo).output_video
     let textFallback: string | undefined
+    const steps = (interaction.steps ?? []) as InteractionStep[]
     for (const step of steps) {
       if (step.type !== 'model_output') continue
       if (step.error?.message) textFallback = step.error.message
       for (const part of step.content ?? []) {
-        if (part.type === 'video') videoPart = part
+        if (part.type === 'video' && !videoPart) videoPart = part
         if (part.type === 'text' && part.text) textFallback = part.text
       }
     }
