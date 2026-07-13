@@ -4,8 +4,6 @@ import { useState, useCallback, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { uploadPresigned } from '@vercel/blob/client'
 
-type AR = 'auto' | '16:9' | '9:16'
-
 const B = {
   full:    'rgba(59,130,246,1)',
   mid:     'rgba(59,130,246,0.5)',
@@ -54,20 +52,13 @@ const AlertIcon = () => (
   </svg>
 )
 
-const ASPECTS: { value: AR; label: string; px: number; py: number }[] = [
-  { value: 'auto', label: 'Auto', px: 12, py: 12 },
-  { value: '16:9', label: '16:9', px: 16, py: 9  },
-  { value: '9:16', label: '9:16', px: 9,  py: 16 },
-]
-
 export default function VideoEditor() {
   const [srcUrl,   setSrcUrl]   = useState<string | null>(null)
   const [srcFile,  setSrcFile]  = useState<File | null>(null)
   const [prompt,   setPrompt]   = useState('')
-  const [ar,       setAr]       = useState<AR>('auto')
   const [dragging, setDragging] = useState(false)
   const [busy,     setBusy]     = useState(false)
-  const [result,   setResult]   = useState<{ url: string; mime: string } | null>(null)
+  const [result,   setResult]   = useState<{ url: string; mime: string; blob: Blob } | null>(null)
   const [err,      setErr]      = useState<string | null>(null)
 
   const fileRef = useRef<HTMLInputElement>(null)
@@ -120,7 +111,7 @@ export default function VideoEditor() {
       const r = await fetch('/api/edit-video', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ videoPathname, prompt: prompt.trim(), aspectRatio: ar }),
+        body: JSON.stringify({ videoPathname, prompt: prompt.trim() }),
       })
       let d: { error?: string; video?: string; mimeType?: string }
       try { d = await r.json() }
@@ -129,7 +120,7 @@ export default function VideoEditor() {
       if (!d.video || !d.mimeType) throw new Error('No video returned.')
 
       const blob = await (await fetch(`data:${d.mimeType};base64,${d.video}`)).blob()
-      setResult({ url: URL.createObjectURL(blob), mime: d.mimeType })
+      setResult({ url: URL.createObjectURL(blob), mime: d.mimeType, blob })
     } catch (e) {
       setErr(e instanceof Error ? e.message : 'Something went wrong.')
     } finally {
@@ -137,10 +128,23 @@ export default function VideoEditor() {
     }
   }
 
-  const download = () => {
+  const download = async () => {
     if (!result) return
+    const filename = `prism-video-${Date.now()}.mp4`
+    // iOS/mobile Safari largely ignores <a download> for blob: URLs, so it looks
+    // like the button does nothing — the Web Share sheet (Save Video) is the
+    // reliable path there. Desktop browsers handle the plain anchor fine.
+    const file = new File([result.blob], filename, { type: result.mime || 'video/mp4' })
+    if (navigator.canShare?.({ files: [file] })) {
+      try {
+        await navigator.share({ files: [file] })
+        return
+      } catch {
+        // user cancelled the share sheet, or share failed — fall through to download
+      }
+    }
     const a = document.createElement('a')
-    a.href = result.url; a.download = `prism-video-${Date.now()}.mp4`; a.click()
+    a.href = result.url; a.download = filename; a.click()
   }
 
   const displayUrl = result?.url ?? srcUrl
@@ -297,35 +301,6 @@ export default function VideoEditor() {
           </span>
         </button>
       </motion.div>
-
-      <motion.section {...fadeUp(0.2)} className="mb-4 rounded-[20px] p-4"
-        style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)' }}>
-
-        <div className="mb-4">
-          <p className="text-[10px] font-semibold tracking-[0.28em] uppercase text-white/28 mb-3">Aspect Ratio</p>
-          <div className="grid grid-cols-3 gap-1.5">
-            {ASPECTS.map(a => {
-              const active = ar === a.value
-              return (
-                <button key={a.value} onClick={() => setAr(a.value)}
-                  className="flex flex-col items-center justify-center gap-1.5 h-[54px] rounded-[10px]"
-                  style={{
-                    background: active ? B.dimmer : 'rgba(255,255,255,0.04)',
-                    border: active ? `1.5px solid ${B.border}` : '1.5px solid rgba(255,255,255,0.07)',
-                  }}>
-                  <div className="rounded-[2px]"
-                    style={{ width: a.px, height: a.py, background: active ? B.full : 'rgba(255,255,255,0.2)' }} />
-                  <span className="text-[9px] font-bold tracking-wide"
-                    style={{ color: active ? B.text : 'rgba(255,255,255,0.4)' }}>
-                    {a.label}
-                  </span>
-                </button>
-              )
-            })}
-          </div>
-          <p className="text-[10px] text-white/25 mt-2 px-0.5">Auto keeps the source clip&apos;s framing.</p>
-        </div>
-      </motion.section>
     </div>
   )
 }
