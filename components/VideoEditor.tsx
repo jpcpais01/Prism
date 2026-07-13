@@ -151,8 +151,8 @@ export default function VideoEditor() {
         <input ref={fileRef} type="file" accept="video/*" className="hidden"
           onChange={e => e.target.files?.[0] && handleFile(e.target.files[0])} />
 
-        <div className="relative rounded-[24px] overflow-hidden" style={{ aspectRatio: '3/4' }}>
-          {!displayUrl ? (
+        {!displayUrl ? (
+          <div className="relative rounded-[24px] overflow-hidden" style={{ aspectRatio: '3/4' }}>
             <div
               onClick={() => fileRef.current?.click()}
               onDrop={onDrop}
@@ -182,71 +182,71 @@ export default function VideoEditor() {
                 MP4 · MOV · WEBM · up to 10s · 60 MB
               </p>
             </div>
-          ) : (
-            <>
-              <video
-                key={displayUrl}
-                src={displayUrl}
-                className="absolute inset-0 w-full h-full object-cover"
-                controls
-                playsInline
-                loop
-              />
+          </div>
+        ) : (
+          <div className="relative rounded-[24px] overflow-hidden" style={{ background: 'rgba(0,0,0,0.4)' }}>
+            {/* object-contain (not cover) + no forced aspect ratio — a forced crop box was
+                what made differently-shaped results (e.g. 16:9 into a portrait box) look wrong */}
+            <video
+              key={displayUrl}
+              src={displayUrl}
+              className="block w-full max-h-[65vh] mx-auto"
+              style={{ objectFit: 'contain' }}
+              controls
+              playsInline
+              loop
+            />
 
-              <button onClick={() => fileRef.current?.click()}
-                className="absolute top-3 left-3 px-2.5 py-1 rounded-lg text-[11px] font-medium text-white/75 transition-colors hover:text-white z-10"
-                style={{ background: 'rgba(0,0,0,0.45)', backdropFilter: 'blur(10px)', border: '1px solid rgba(255,255,255,0.12)' }}>
-                Change
+            <button onClick={() => fileRef.current?.click()}
+              className="absolute top-3 left-3 px-2.5 py-1 rounded-lg text-[11px] font-medium text-white/75 transition-colors hover:text-white z-10"
+              style={{ background: 'rgba(0,0,0,0.45)', backdropFilter: 'blur(10px)', border: '1px solid rgba(255,255,255,0.12)' }}>
+              Change
+            </button>
+
+            <div className="absolute top-3 right-3 z-10">
+              <button onClick={clear}
+                className="w-8 h-8 rounded-full flex items-center justify-center text-white/70 hover:text-white transition-colors"
+                style={{ background: 'rgba(0,0,0,0.45)', backdropFilter: 'blur(10px)' }}>
+                <CloseIcon />
               </button>
+            </div>
 
-              <div className="absolute top-3 right-3 z-10">
-                <button onClick={clear}
-                  className="w-8 h-8 rounded-full flex items-center justify-center text-white/70 hover:text-white transition-colors"
-                  style={{ background: 'rgba(0,0,0,0.45)', backdropFilter: 'blur(10px)' }}>
-                  <CloseIcon />
-                </button>
+            {busy && (
+              <div className="absolute inset-0 flex flex-col items-center justify-center overflow-hidden z-20"
+                style={{ background: 'rgba(0,0,0,0.55)', backdropFilter: 'blur(6px)', WebkitBackdropFilter: 'blur(6px)' }}>
+                <div className="relative flex items-center justify-center mb-5">
+                  <div className="absolute w-16 h-16 rounded-full animate-ring-pulse"
+                    style={{ border: '1px solid rgba(147,197,253,0.4)' }} />
+                  <div className="absolute w-16 h-16 rounded-full animate-ring-pulse"
+                    style={{ border: '1px solid rgba(147,197,253,0.3)', animationDelay: '1.3s' }} />
+                  <div className="absolute w-16 h-16 rounded-full"
+                    style={{ border: '1px solid rgba(255,255,255,0.06)' }} />
+                  <div className="w-7 h-7 rounded-full animate-spin-elegant"
+                    style={{
+                      border: '1.5px solid transparent',
+                      borderTopColor: 'rgba(147,197,253,0.8)',
+                      borderRightColor: 'rgba(147,197,253,0.2)',
+                    }} />
+                </div>
+                <span className="text-[10px] font-semibold tracking-[0.35em] uppercase"
+                  style={{ color: 'rgba(255,255,255,0.28)' }}>
+                  Editing
+                </span>
               </div>
+            )}
+          </div>
+        )}
 
-              {result && (
-                <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between z-10">
-                  <span className="text-[10px] text-white/70 font-medium px-2.5 py-1 rounded-lg"
-                    style={{ background: 'rgba(0,0,0,0.45)', backdropFilter: 'blur(10px)' }}>
-                    Edited
-                  </span>
-                  <button onClick={download}
-                    className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-[11px] font-semibold"
-                    style={{ background: 'rgba(59,130,246,0.25)', border: `1px solid ${B.border}`, color: B.text }}>
-                    <DownloadIcon />Save
-                  </button>
-                </div>
-              )}
-
-              {busy && (
-                <div className="absolute inset-0 flex flex-col items-center justify-center overflow-hidden z-20"
-                  style={{ background: 'rgba(0,0,0,0.55)', backdropFilter: 'blur(6px)', WebkitBackdropFilter: 'blur(6px)' }}>
-                  <div className="relative flex items-center justify-center mb-5">
-                    <div className="absolute w-16 h-16 rounded-full animate-ring-pulse"
-                      style={{ border: '1px solid rgba(147,197,253,0.4)' }} />
-                    <div className="absolute w-16 h-16 rounded-full animate-ring-pulse"
-                      style={{ border: '1px solid rgba(147,197,253,0.3)', animationDelay: '1.3s' }} />
-                    <div className="absolute w-16 h-16 rounded-full"
-                      style={{ border: '1px solid rgba(255,255,255,0.06)' }} />
-                    <div className="w-7 h-7 rounded-full animate-spin-elegant"
-                      style={{
-                        border: '1.5px solid transparent',
-                        borderTopColor: 'rgba(147,197,253,0.8)',
-                        borderRightColor: 'rgba(147,197,253,0.2)',
-                      }} />
-                  </div>
-                  <span className="text-[10px] font-semibold tracking-[0.35em] uppercase"
-                    style={{ color: 'rgba(255,255,255,0.28)' }}>
-                    Editing
-                  </span>
-                </div>
-              )}
-            </>
-          )}
-        </div>
+        {/* Save lives outside the video entirely — the native <video controls> scrubber
+            bar swallows clicks in its own region regardless of z-index, so an overlay
+            button there is never reliably clickable. */}
+        {result && (
+          <button onClick={download}
+            className="mt-3 w-full flex items-center justify-center gap-2 py-3 rounded-[16px] text-sm font-bold transition-colors"
+            style={{ background: B.dim, border: `1.5px solid ${B.border}`, color: B.text }}>
+            <DownloadIcon />Save Edited Video
+          </button>
+        )}
       </motion.section>
 
       <motion.section {...fadeUp(0.12)} className="mb-4">
