@@ -4,6 +4,7 @@ import { useState, useCallback, useRef, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { uploadPresigned } from '@vercel/blob/client'
 import Toast from '@/components/Toast'
+import { saveMedia } from '@/lib/saveMedia'
 
 const B = {
   full:    'rgba(59,130,246,1)',
@@ -138,17 +139,7 @@ export default function VideoEditor() {
 
   const download = () => {
     if (!result) return
-    try {
-      const a = document.createElement('a')
-      a.href = result.url
-      a.download = `prism-video-${Date.now()}.mp4`
-      document.body.appendChild(a)
-      a.click()
-      a.remove()
-      setToast('Video saved')
-    } catch {
-      setToast('Could not save video')
-    }
+    saveMedia(result.url, `prism-video-${Date.now()}.mp4`, result.mime, setToast)
   }
 
   const displayUrl = result?.url ?? srcUrl

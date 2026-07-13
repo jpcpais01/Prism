@@ -4,6 +4,7 @@ import { useState, useCallback, useRef, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import VideoEditor from '@/components/VideoEditor'
 import Toast from '@/components/Toast'
+import { saveMedia } from '@/lib/saveMedia'
 
 /* ─── Types ─────────────────────────────────────────────── */
 type AR  = 'auto' | '1:1' | '3:4' | '4:3' | '2:3' | '3:2' | '9:16' | '16:9'
@@ -280,17 +281,7 @@ export default function PrismApp() {
 
   const download = () => {
     if (!result) return
-    try {
-      const a = document.createElement('a')
-      a.href = result.img
-      a.download = `prism-${Date.now()}.png`
-      document.body.appendChild(a)
-      a.click()
-      a.remove()
-      setToast('Photo saved')
-    } catch {
-      setToast('Could not save photo')
-    }
+    saveMedia(result.img, `prism-${Date.now()}.png`, result.mime, setToast)
   }
 
   const currentImg = viewIdx === 1 && result ? result.img : src
