@@ -2,7 +2,7 @@
 
 import { useState, useCallback, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { upload } from '@vercel/blob/client'
+import { uploadPresigned } from '@vercel/blob/client'
 
 type AR = 'auto' | '16:9' | '9:16'
 type Dur = 'auto' | '4s' | '6s' | '8s' | '10s'
@@ -113,7 +113,7 @@ export default function VideoEditor() {
     try {
       // Upload direct to Blob storage first — Vercel serverless functions cap
       // request bodies at 4.5MB, which most real video clips exceed.
-      const { url: videoUrl } = await upload(`videos/${Date.now()}-${srcFile.name}`, srcFile, {
+      const { url: videoUrl } = await uploadPresigned(`videos/${Date.now()}-${srcFile.name}`, srcFile, {
         access: 'public',
         handleUploadUrl: '/api/video-upload-token',
         contentType: srcFile.type || 'video/mp4',
