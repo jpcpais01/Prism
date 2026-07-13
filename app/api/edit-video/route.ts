@@ -1,10 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { GoogleGenAI } from '@google/genai'
+import { del } from '@vercel/blob'
 
 export const maxDuration = 300
 
 const FILE_POLL_INTERVAL_MS = 3000
 const FILE_POLL_MAX_ATTEMPTS = 40 // ~2 minutes
+const BLOB_URL_PATTERN = /^https:\/\/[a-z0-9-]+\.public\.blob\.vercel-storage\.com\//
 
 type InteractionContentPart = {
   type: string
@@ -21,11 +23,7 @@ type InteractionStep = {
 
 export async function POST(req: NextRequest) {
   try {
-    const form = await req.formData()
-    const video = form.get('video')
-    const prompt = form.get('prompt')
-    const aspectRatio = form.get('aspectRatio')
-    const duration = form.get('duration')
+    const { videoUrl, prompt, aspectRatio, duration } = await req.json()
 
     const apiKey = process.env.GEMINI_API_KEY
     if (!apiKey) {
@@ -35,22 +33,30 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    if (!(video instanceof File) || typeof prompt !== 'string' || !prompt.trim()) {
-      return NextResponse.json({ error: 'A video file and an edit prompt are required.' }, { status: 400 })
+    if (typeof videoUrl !== 'string' || !BLOB_URL_PATTERN.test(videoUrl) || typeof prompt !== 'string' || !prompt.trim()) {
+      return NextResponse.json({ error: 'A video and an edit prompt are required.' }, { status: 400 })
     }
 
-    if (video.size > 60 * 1024 * 1024) {
-      return NextResponse.json({ error: 'Video must be under 60 MB.' }, { status: 400 })
+    // Video bytes arrive via Vercel Blob (client-uploaded) to stay under the
+    // platform's 4.5MB request-body limit for the request that hits this route.
+    const videoRes = await fetch(videoUrl)
+    if (!videoRes.ok) {
+      return NextResponse.json({ error: 'Could not read the uploaded video.' }, { status: 400 })
     }
+    const inputMimeType = videoRes.headers.get('content-type') || 'video/mp4'
+    const videoBlob = new Blob([await videoRes.arrayBuffer()], { type: inputMimeType })
 
     const ai = new GoogleGenAI({ apiKey })
     const model = process.env.GEMINI_VIDEO_MODEL ?? 'gemini-omni-flash-preview'
 
     // 1. Upload the source video to the Files API
     let uploaded = await ai.files.upload({
-      file: video,
-      config: { mimeType: video.type || 'video/mp4' },
+      file: videoBlob,
+      config: { mimeType: inputMimeType },
     })
+
+    // Best-effort cleanup of the Blob copy now that Gemini has its own copy
+    del(videoUrl).catch(() => {})
 
     // 2. Poll until the file finishes processing
     let attempts = 0

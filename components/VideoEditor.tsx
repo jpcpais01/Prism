@@ -2,6 +2,7 @@
 
 import { useState, useCallback, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
+import { upload } from '@vercel/blob/client'
 
 type AR = 'auto' | '16:9' | '9:16'
 type Dur = 'auto' | '4s' | '6s' | '8s' | '10s'
@@ -110,16 +111,23 @@ export default function VideoEditor() {
     if (!srcFile || !prompt.trim() || busy) return
     setBusy(true); setErr(null)
     try {
-      const form = new FormData()
-      form.append('video', srcFile)
-      form.append('prompt', prompt.trim())
-      form.append('aspectRatio', ar)
-      form.append('duration', dur)
+      // Upload direct to Blob storage first — Vercel serverless functions cap
+      // request bodies at 4.5MB, which most real video clips exceed.
+      const { url: videoUrl } = await upload(`videos/${Date.now()}-${srcFile.name}`, srcFile, {
+        access: 'public',
+        handleUploadUrl: '/api/video-upload-token',
+        contentType: srcFile.type || 'video/mp4',
+        multipart: true,
+      })
 
-      const r = await fetch('/api/edit-video', { method: 'POST', body: form })
+      const r = await fetch('/api/edit-video', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ videoUrl, prompt: prompt.trim(), aspectRatio: ar, duration: dur }),
+      })
       let d: { error?: string; video?: string; mimeType?: string }
       try { d = await r.json() }
-      catch { throw new Error('Video may be too large. Try a shorter clip.') }
+      catch { throw new Error('Something went wrong processing the video.') }
       if (!r.ok) throw new Error(d.error ?? 'Processing failed.')
       if (!d.video || !d.mimeType) throw new Error('No video returned.')
 
