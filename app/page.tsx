@@ -2,6 +2,7 @@
 
 import { useState, useCallback, useRef, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
+import VideoEditor from '@/components/VideoEditor'
 
 /* ─── Types ─────────────────────────────────────────────── */
 type AR  = 'auto' | '1:1' | '3:4' | '4:3' | '2:3' | '3:2' | '9:16' | '16:9'
@@ -135,6 +136,7 @@ const ExpandIcon = () => (
    MAIN COMPONENT
 ══════════════════════════════════════════════════════════ */
 export default function PrismApp() {
+  const [mode,       setMode]       = useState<'photo' | 'video'>('photo')
   const [src,        setSrc]        = useState<string | null>(null)
   const [srcMime,    setSrcMime]    = useState('image/jpeg')
   const [style,      setStyle]      = useState<string>('high-quality')
@@ -403,6 +405,29 @@ export default function PrismApp() {
         <motion.header {...fadeUp(0)} className="text-center mb-2">
           <h1 className="text-[28px] font-black tracking-tight text-white">Prism</h1>
         </motion.header>
+
+        {/* ═══════ MODE TOGGLE ═══════ */}
+        <motion.div {...fadeUp(0.03)} className="mb-5 flex p-1 rounded-2xl"
+          style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)' }}>
+          {(['photo', 'video'] as const).map(m => {
+            const active = mode === m
+            return (
+              <button key={m} onClick={() => setMode(m)}
+                className="flex-1 py-2.5 rounded-xl text-sm font-bold capitalize transition-all"
+                style={{
+                  background: active ? B.dimmer : 'transparent',
+                  border: active ? `1.5px solid ${B.border}` : '1.5px solid transparent',
+                  color: active ? B.text : 'rgba(255,255,255,0.4)',
+                }}>
+                {m}
+              </button>
+            )
+          })}
+        </motion.div>
+
+        {mode === 'video' && <VideoEditor />}
+
+        {mode === 'photo' && <>
 
         {/* ═══════ IMAGE REGION (2:3) ═══════ */}
         <motion.section {...fadeUp(0.06)} className="mb-5">
@@ -794,6 +819,8 @@ export default function PrismApp() {
             </div>
           </div>
         </motion.section>
+
+        </>}
 
       </div>
     </main>
