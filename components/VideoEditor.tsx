@@ -1,8 +1,9 @@
 'use client'
 
-import { useState, useCallback, useRef } from 'react'
+import { useState, useCallback, useRef, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { uploadPresigned } from '@vercel/blob/client'
+import Toast from '@/components/Toast'
 
 const B = {
   full:    'rgba(59,130,246,1)',
@@ -60,8 +61,15 @@ export default function VideoEditor() {
   const [busy,     setBusy]     = useState(false)
   const [result,   setResult]   = useState<{ url: string; mime: string } | null>(null)
   const [err,      setErr]      = useState<string | null>(null)
+  const [toast,    setToast]    = useState<string | null>(null)
 
   const fileRef = useRef<HTMLInputElement>(null)
+
+  useEffect(() => {
+    if (!toast) return
+    const t = setTimeout(() => setToast(null), 2200)
+    return () => clearTimeout(t)
+  }, [toast])
 
   const handleFile = useCallback((file: File) => {
     if (!file.type.startsWith('video/')) { setErr('Please upload a video file.'); return }
@@ -130,14 +138,24 @@ export default function VideoEditor() {
 
   const download = () => {
     if (!result) return
-    const a = document.createElement('a')
-    a.href = result.url; a.download = `prism-video-${Date.now()}.mp4`; a.click()
+    try {
+      const a = document.createElement('a')
+      a.href = result.url
+      a.download = `prism-video-${Date.now()}.mp4`
+      document.body.appendChild(a)
+      a.click()
+      a.remove()
+      setToast('Video saved')
+    } catch {
+      setToast('Could not save video')
+    }
   }
 
   const displayUrl = result?.url ?? srcUrl
 
   return (
     <div>
+      <Toast message={toast} />
       <motion.section {...fadeUp(0.06)} className="mb-5">
         <input ref={fileRef} type="file" accept="video/*" className="hidden"
           onChange={e => e.target.files?.[0] && handleFile(e.target.files[0])} />

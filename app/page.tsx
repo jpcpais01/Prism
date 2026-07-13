@@ -3,6 +3,7 @@
 import { useState, useCallback, useRef, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import VideoEditor from '@/components/VideoEditor'
+import Toast from '@/components/Toast'
 
 /* ─── Types ─────────────────────────────────────────────── */
 type AR  = 'auto' | '1:1' | '3:4' | '4:3' | '2:3' | '3:2' | '9:16' | '16:9'
@@ -154,6 +155,7 @@ export default function PrismApp() {
   const [extraEdits, setExtraEdits] = useState('')
   const [viewIdx,    setViewIdx]    = useState(0)   // 0=original 1=result
   const [lightbox,   setLightbox]   = useState(false)
+  const [toast,      setToast]      = useState<string | null>(null)
 
   const fileRef = useRef<HTMLInputElement>(null)
 
@@ -163,6 +165,12 @@ export default function PrismApp() {
       if (c) setCustoms(JSON.parse(c))
     } catch {}
   }, [])
+
+  useEffect(() => {
+    if (!toast) return
+    const t = setTimeout(() => setToast(null), 2200)
+    return () => clearTimeout(t)
+  }, [toast])
 
 /* lock body scroll when any lightbox is open */
   useEffect(() => {
@@ -272,8 +280,17 @@ export default function PrismApp() {
 
   const download = () => {
     if (!result) return
-    const a = document.createElement('a')
-    a.href = result.img; a.download = `prism-${Date.now()}.png`; a.click()
+    try {
+      const a = document.createElement('a')
+      a.href = result.img
+      a.download = `prism-${Date.now()}.png`
+      document.body.appendChild(a)
+      a.click()
+      a.remove()
+      setToast('Photo saved')
+    } catch {
+      setToast('Could not save photo')
+    }
   }
 
   const currentImg = viewIdx === 1 && result ? result.img : src
@@ -294,6 +311,7 @@ export default function PrismApp() {
   return (
     <main className="min-h-svh bg-black text-white overflow-x-hidden selection:bg-blue-500/30">
       <Orbs />
+      <Toast message={toast} />
 
       {/* ═══════ LIGHTBOX ═══════ */}
       <AnimatePresence>
