@@ -1,12 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { GoogleGenAI } from '@google/genai'
-import { del } from '@vercel/blob'
+import { get, del } from '@vercel/blob'
 
 export const maxDuration = 300
 
 const FILE_POLL_INTERVAL_MS = 3000
 const FILE_POLL_MAX_ATTEMPTS = 40 // ~2 minutes
-const BLOB_URL_PATTERN = /^https:\/\/[a-z0-9-]+\.public\.blob\.vercel-storage\.com\//
 
 type InteractionContentPart = {
   type: string
@@ -23,7 +22,7 @@ type InteractionStep = {
 
 export async function POST(req: NextRequest) {
   try {
-    const { videoUrl, prompt, aspectRatio, duration } = await req.json()
+    const { videoPathname, prompt, aspectRatio, duration } = await req.json()
 
     const apiKey = process.env.GEMINI_API_KEY
     if (!apiKey) {
@@ -33,18 +32,19 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    if (typeof videoUrl !== 'string' || !BLOB_URL_PATTERN.test(videoUrl) || typeof prompt !== 'string' || !prompt.trim()) {
+    if (typeof videoPathname !== 'string' || !videoPathname.startsWith('videos/') || typeof prompt !== 'string' || !prompt.trim()) {
       return NextResponse.json({ error: 'A video and an edit prompt are required.' }, { status: 400 })
     }
 
     // Video bytes arrive via Vercel Blob (client-uploaded) to stay under the
     // platform's 4.5MB request-body limit for the request that hits this route.
-    const videoRes = await fetch(videoUrl)
-    if (!videoRes.ok) {
+    // This is a private store, so reads need the SDK's auth (OIDC), not a plain fetch().
+    const stored = await get(videoPathname, { access: 'private' })
+    if (!stored || stored.statusCode !== 200) {
       return NextResponse.json({ error: 'Could not read the uploaded video.' }, { status: 400 })
     }
-    const inputMimeType = videoRes.headers.get('content-type') || 'video/mp4'
-    const videoBlob = new Blob([await videoRes.arrayBuffer()], { type: inputMimeType })
+    const inputMimeType = stored.blob.contentType || 'video/mp4'
+    const videoBlob = new Blob([await new Response(stored.stream).arrayBuffer()], { type: inputMimeType })
 
     const ai = new GoogleGenAI({ apiKey })
     const model = process.env.GEMINI_VIDEO_MODEL ?? 'gemini-omni-flash-preview'
@@ -56,7 +56,7 @@ export async function POST(req: NextRequest) {
     })
 
     // Best-effort cleanup of the Blob copy now that Gemini has its own copy
-    del(videoUrl).catch(() => {})
+    del(videoPathname).catch(() => {})
 
     // 2. Poll until the file finishes processing
     let attempts = 0

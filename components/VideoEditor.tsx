@@ -113,8 +113,8 @@ export default function VideoEditor() {
     try {
       // Upload direct to Blob storage first — Vercel serverless functions cap
       // request bodies at 4.5MB, which most real video clips exceed.
-      const { url: videoUrl } = await uploadPresigned(`videos/${Date.now()}-${srcFile.name}`, srcFile, {
-        access: 'public',
+      const { pathname: videoPathname } = await uploadPresigned(`videos/${Date.now()}-${srcFile.name}`, srcFile, {
+        access: 'private',
         handleUploadUrl: '/api/video-upload-token',
         contentType: srcFile.type || 'video/mp4',
         multipart: true,
@@ -123,7 +123,7 @@ export default function VideoEditor() {
       const r = await fetch('/api/edit-video', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ videoUrl, prompt: prompt.trim(), aspectRatio: ar, duration: dur }),
+        body: JSON.stringify({ videoPathname, prompt: prompt.trim(), aspectRatio: ar, duration: dur }),
       })
       let d: { error?: string; video?: string; mimeType?: string }
       try { d = await r.json() }
