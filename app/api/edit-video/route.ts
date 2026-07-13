@@ -22,7 +22,7 @@ type InteractionStep = {
 
 export async function POST(req: NextRequest) {
   try {
-    const { videoPathname, prompt, aspectRatio, duration } = await req.json()
+    const { videoPathname, prompt, aspectRatio } = await req.json()
 
     const apiKey = process.env.GEMINI_API_KEY
     if (!apiKey) {
@@ -72,18 +72,16 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Video upload failed to process.' }, { status: 500 })
     }
 
-    // 3. Build the response_format — omit fields for "auto" so the model decides
+    // 3. Build the response_format — omit aspect_ratio for "auto" so the model
+    // matches the source clip. Gemini rejects `duration` entirely for edit tasks
+    // (the edited clip keeps the source's length), so it's never sent here.
     const responseFormat: {
       type: 'video'
       delivery: 'inline' | 'uri'
       aspect_ratio?: '16:9' | '9:16'
-      duration?: string
     } = { type: 'video', delivery: 'inline' }
     if (aspectRatio === '16:9' || aspectRatio === '9:16') {
       responseFormat.aspect_ratio = aspectRatio
-    }
-    if (typeof duration === 'string' && /^(4|6|8|10)s$/.test(duration)) {
-      responseFormat.duration = duration
     }
 
     // 4. Run the edit interaction

@@ -5,7 +5,6 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { uploadPresigned } from '@vercel/blob/client'
 
 type AR = 'auto' | '16:9' | '9:16'
-type Dur = 'auto' | '4s' | '6s' | '8s' | '10s'
 
 const B = {
   full:    'rgba(59,130,246,1)',
@@ -60,14 +59,12 @@ const ASPECTS: { value: AR; label: string; px: number; py: number }[] = [
   { value: '16:9', label: '16:9', px: 16, py: 9  },
   { value: '9:16', label: '9:16', px: 9,  py: 16 },
 ]
-const DURATIONS: Dur[] = ['auto', '4s', '6s', '8s', '10s']
 
 export default function VideoEditor() {
   const [srcUrl,   setSrcUrl]   = useState<string | null>(null)
   const [srcFile,  setSrcFile]  = useState<File | null>(null)
   const [prompt,   setPrompt]   = useState('')
   const [ar,       setAr]       = useState<AR>('auto')
-  const [dur,      setDur]      = useState<Dur>('auto')
   const [dragging, setDragging] = useState(false)
   const [busy,     setBusy]     = useState(false)
   const [result,   setResult]   = useState<{ url: string; mime: string } | null>(null)
@@ -123,7 +120,7 @@ export default function VideoEditor() {
       const r = await fetch('/api/edit-video', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ videoPathname, prompt: prompt.trim(), aspectRatio: ar, duration: dur }),
+        body: JSON.stringify({ videoPathname, prompt: prompt.trim(), aspectRatio: ar }),
       })
       let d: { error?: string; video?: string; mimeType?: string }
       try { d = await r.json() }
@@ -327,27 +324,6 @@ export default function VideoEditor() {
             })}
           </div>
           <p className="text-[10px] text-white/25 mt-2 px-0.5">Auto keeps the source clip&apos;s framing.</p>
-        </div>
-
-        <div>
-          <p className="text-[10px] font-semibold tracking-[0.28em] uppercase text-white/28 mb-3">Duration</p>
-          <div className="grid grid-cols-5 gap-1.5">
-            {DURATIONS.map(d => {
-              const active = dur === d
-              return (
-                <button key={d} onClick={() => setDur(d)}
-                  className="py-2.5 rounded-[10px] text-[11px] font-black tracking-wide uppercase transition-all"
-                  style={{
-                    background: active ? B.dimmer : 'rgba(255,255,255,0.04)',
-                    border: active ? `1.5px solid ${B.border}` : '1.5px solid rgba(255,255,255,0.07)',
-                    color: active ? B.text : 'rgba(255,255,255,0.35)',
-                  }}>
-                  {d}
-                </button>
-              )
-            })}
-          </div>
-          <p className="text-[10px] text-white/25 mt-2 px-0.5">Auto lets the model choose (up to 10s).</p>
         </div>
       </motion.section>
     </div>
